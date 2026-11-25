@@ -1,9 +1,5 @@
 # ZZZ Code
 
-<p align="center">
-  <img src="zzz-code.png" alt="ZZZ Code" width="100%">
-</p>
-
 > [!WARNING]
 > **ALL TELEMETRY HAS BEEN REMOVED.**
 >
