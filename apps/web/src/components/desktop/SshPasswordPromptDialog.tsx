@@ -177,8 +177,8 @@ function ActiveSshPasswordPrompt({
               <code>
                 <Var>{target}</Var>
               </code>
-              . M3 Code passes your response to the local SSH process and keeps it in memory to
-              reuse for this host. M3 Code does not write it to disk.
+              . ZZZ Code passes your response to the local SSH process and keeps it in memory to
+              reuse for this host. ZZZ Code does not write it to disk.
             </T>
           </DialogDescription>
         </DialogHeader>

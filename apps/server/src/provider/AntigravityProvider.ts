@@ -220,7 +220,7 @@ export const makeAntigravityProvider = Effect.fn("makeAntigravityProvider")(func
         auth: { status: "unknown", ...(options.auth ? { type: options.auth.type } : {}) },
         message: settings.enabled
           ? "Checking Antigravity availability."
-          : "Antigravity is disabled in M3 Code settings.",
+          : "Antigravity is disabled in ZZZ Code settings.",
       },
     }),
     setup: { canAuthenticate: true, canInstall: true },

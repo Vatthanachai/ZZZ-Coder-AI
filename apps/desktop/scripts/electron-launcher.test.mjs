@@ -5,6 +5,7 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeVM from "node:vm";
 
+import * as HostProcess from "@t3tools/shared/HostProcess";
 import { assert, describe, it } from "vite-plus/test";
 
 import {
@@ -14,6 +15,9 @@ import {
   resolveMacLauncherPaths,
   writeDevelopmentLauncherScript,
 } from "./electron-launcher.mjs";
+
+// Windows has no POSIX execute bits to restore.
+const onWindowsHost = HostProcess.Platform.defaultValue() === "win32";
 
 describe("electron development launcher", () => {
   it("uses captured values only as fallbacks for a live runner environment", () => {
@@ -76,18 +80,18 @@ describe("electron development launcher", () => {
 
   it("keeps the native Electron executable name inside the branded macOS bundle", () => {
     const paths = resolveMacLauncherPaths(
-      "/repo/apps/desktop/.electron-runtime/M3 Code (Dev).app",
-      "M3 Code (Dev)",
+      "/repo/apps/desktop/.electron-runtime/ZZZ Code (Dev).app",
+      "ZZZ Code (Dev)",
     );
 
-    assert.equal(paths.launcherExecutableName, "M3 Code (Dev) Launcher");
+    assert.equal(paths.launcherExecutableName, "ZZZ Code (Dev) Launcher");
     assert.equal(
       paths.launcherBinaryPath,
-      "/repo/apps/desktop/.electron-runtime/M3 Code (Dev).app/Contents/MacOS/M3 Code (Dev) Launcher",
+      "/repo/apps/desktop/.electron-runtime/ZZZ Code (Dev).app/Contents/MacOS/ZZZ Code (Dev) Launcher",
     );
     assert.equal(
       paths.runtimeElectronBinaryPath,
-      "/repo/apps/desktop/.electron-runtime/M3 Code (Dev).app/Contents/MacOS/Electron",
+      "/repo/apps/desktop/.electron-runtime/ZZZ Code (Dev).app/Contents/MacOS/Electron",
     );
 
     const script = makeDevelopmentLauncherScript({
@@ -98,12 +102,12 @@ describe("electron development launcher", () => {
     });
     assert.include(
       script,
-      "exec '/repo/apps/desktop/.electron-runtime/M3 Code (Dev).app/Contents/MacOS/Electron'",
+      "exec '/repo/apps/desktop/.electron-runtime/ZZZ Code (Dev).app/Contents/MacOS/Electron'",
     );
     assert.notInclude(script, "node_modules/electron");
   });
 
-  it("restores execute permissions on an unchanged launcher", () => {
+  it.skipIf(onWindowsHost)("restores execute permissions on an unchanged launcher", () => {
     const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "t3-launcher-"));
     const launcherPath = NodePath.join(directory, "launcher");
     try {

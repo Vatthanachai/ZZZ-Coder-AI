@@ -1416,9 +1416,9 @@ const program = Effect.gen(function* () {
             rawInput: { variant: "WebFetch", url: "https://t3.codes" },
             rawOutput: {
               type: "WebFetch",
-              Content: { url: "https://t3.codes", content: "M3 Code page" },
+              Content: { url: "https://t3.codes", content: "ZZZ Code page" },
             },
-            content: [{ type: "content", content: { type: "text", text: "M3 Code page" } }],
+            content: [{ type: "content", content: { type: "text", text: "ZZZ Code page" } }],
           },
           {
             sessionUpdate: "tool_call_update",

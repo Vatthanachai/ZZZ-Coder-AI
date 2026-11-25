@@ -84,7 +84,7 @@ export function TunnelWebView({
     readonly debug?: string;
     /**
      * Whether the environment itself was out of reach (`environment`), answered that nothing
-     * listens on the port (`port`), or runs a M3 Code server without the tunnel (`outdated`).
+     * listens on the port (`port`), or runs a ZZZ Code server without the tunnel (`outdated`).
      */
     readonly cause?: TunnelFailureCause;
   }) => void;

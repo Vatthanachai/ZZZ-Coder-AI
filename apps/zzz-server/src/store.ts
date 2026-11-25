@@ -1,9 +1,9 @@
 import * as NodeCrypto from "node:crypto";
-import * as NodeFs from "node:fs";
+import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import * as NodeSqlite from "node:sqlite";
 
-export interface M3EnvironmentRecord {
+export interface ZZZEnvironmentRecord {
   readonly id: string;
   readonly label: string;
   readonly endpoints: ReadonlyArray<string>;
@@ -15,11 +15,11 @@ export interface M3EnvironmentRecord {
   readonly createdAt: number;
 }
 
-export interface M3EnvironmentPublic extends M3EnvironmentRecord {
+export interface ZZZEnvironmentPublic extends ZZZEnvironmentRecord {
   readonly online: boolean;
 }
 
-export interface M3PairingCodeRecord {
+export interface ZZZPairingCodeRecord {
   readonly code: string;
   readonly environmentId: string;
   readonly scopes: ReadonlyArray<string>;
@@ -40,22 +40,22 @@ export interface RegisterEnvironmentInput {
 const DEFAULT_ONLINE_TTL_MS = 90_000;
 const DEFAULT_PAIRING_TTL_MS = 5 * 60_000;
 
-export class M3ServerStore {
-  readonly #db: DatabaseSync;
+export class ZZZServerStore {
+  readonly #db: NodeSqlite.DatabaseSync;
   readonly #onlineTtlMs: number;
 
   constructor(dbPath: string, options?: { readonly onlineTtlMs?: number }) {
     if (dbPath !== ":memory:") {
-      NodeFs.mkdirSync(NodePath.dirname(dbPath), { recursive: true });
+      NodeFS.mkdirSync(NodePath.dirname(dbPath), { recursive: true });
     }
-    this.#db = new DatabaseSync(dbPath);
+    this.#db = new NodeSqlite.DatabaseSync(dbPath);
     this.#onlineTtlMs = options?.onlineTtlMs ?? DEFAULT_ONLINE_TTL_MS;
     this.#db.exec(`
       PRAGMA journal_mode = WAL;
       PRAGMA synchronous = NORMAL;
       PRAGMA busy_timeout = 5000;
 
-      CREATE TABLE IF NOT EXISTS m3_environments (
+      CREATE TABLE IF NOT EXISTS zzz_environments (
         id TEXT PRIMARY KEY,
         label TEXT NOT NULL,
         endpoints_json TEXT NOT NULL,
@@ -67,14 +67,14 @@ export class M3ServerStore {
         created_at INTEGER NOT NULL
       );
 
-      CREATE TABLE IF NOT EXISTS m3_pairing_codes (
+      CREATE TABLE IF NOT EXISTS zzz_pairing_codes (
         code TEXT PRIMARY KEY,
         environment_id TEXT NOT NULL,
         scopes_json TEXT NOT NULL,
         expires_at INTEGER NOT NULL,
         created_at INTEGER NOT NULL
       );
-      CREATE INDEX IF NOT EXISTS idx_m3_pairing_expires ON m3_pairing_codes(expires_at);
+      CREATE INDEX IF NOT EXISTS idx_zzz_pairing_expires ON zzz_pairing_codes(expires_at);
     `);
   }
 
@@ -82,15 +82,15 @@ export class M3ServerStore {
     this.#db.close();
   }
 
-  registerEnvironment(input: RegisterEnvironmentInput, now = Date.now()): M3EnvironmentPublic {
+  registerEnvironment(input: RegisterEnvironmentInput, now = Date.now()): ZZZEnvironmentPublic {
     const existing = this.#db
-      .prepare("SELECT created_at FROM m3_environments WHERE id = ?")
+      .prepare("SELECT created_at FROM zzz_environments WHERE id = ?")
       .get(input.id) as { created_at: number } | undefined;
     const createdAt = existing?.created_at ?? now;
     const endpointsJson = JSON.stringify([...new Set(input.endpoints)]);
     this.#db
       .prepare(
-        `INSERT INTO m3_environments (
+        `INSERT INTO zzz_environments (
           id, label, endpoints_json, mcp_url, e2ee_fingerprint, platform, version, last_seen_at, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
@@ -116,23 +116,23 @@ export class M3ServerStore {
     return this.getEnvironment(input.id, now)!;
   }
 
-  getEnvironment(id: string, now = Date.now()): M3EnvironmentPublic | null {
-    const row = this.#db
-      .prepare("SELECT * FROM m3_environments WHERE id = ?")
-      .get(id) as Record<string, unknown> | undefined;
+  getEnvironment(id: string, now = Date.now()): ZZZEnvironmentPublic | null {
+    const row = this.#db.prepare("SELECT * FROM zzz_environments WHERE id = ?").get(id) as
+      | Record<string, unknown>
+      | undefined;
     return row ? this.#rowToEnv(row, now) : null;
   }
 
-  listEnvironments(now = Date.now()): ReadonlyArray<M3EnvironmentPublic> {
+  listEnvironments(now = Date.now()): ReadonlyArray<ZZZEnvironmentPublic> {
     const rows = this.#db
-      .prepare("SELECT * FROM m3_environments ORDER BY last_seen_at DESC")
+      .prepare("SELECT * FROM zzz_environments ORDER BY last_seen_at DESC")
       .all() as Array<Record<string, unknown>>;
     return rows.map((row) => this.#rowToEnv(row, now));
   }
 
   deleteEnvironment(id: string): boolean {
-    this.#db.prepare("DELETE FROM m3_pairing_codes WHERE environment_id = ?").run(id);
-    const result = this.#db.prepare("DELETE FROM m3_environments WHERE id = ?").run(id);
+    this.#db.prepare("DELETE FROM zzz_pairing_codes WHERE environment_id = ?").run(id);
+    const result = this.#db.prepare("DELETE FROM zzz_environments WHERE id = ?").run(id);
     return Number(result.changes) > 0;
   }
 
@@ -140,7 +140,7 @@ export class M3ServerStore {
     environmentId: string,
     scopes: ReadonlyArray<string> = ["mcp"],
     options?: { readonly ttlMs?: number; readonly now?: number },
-  ): M3PairingCodeRecord | null {
+  ): ZZZPairingCodeRecord | null {
     const now = options?.now ?? Date.now();
     this.pruneExpiredPairings(now);
     const env = this.getEnvironment(environmentId, now);
@@ -150,7 +150,7 @@ export class M3ServerStore {
     const expiresAt = now + (options?.ttlMs ?? DEFAULT_PAIRING_TTL_MS);
     this.#db
       .prepare(
-        `INSERT INTO m3_pairing_codes (code, environment_id, scopes_json, expires_at, created_at)
+        `INSERT INTO zzz_pairing_codes (code, environment_id, scopes_json, expires_at, created_at)
          VALUES (?, ?, ?, ?, ?)`,
       )
       .run(code, environmentId, JSON.stringify([...scopes]), expiresAt, now);
@@ -160,15 +160,15 @@ export class M3ServerStore {
   redeemPairingCode(
     code: string,
     now = Date.now(),
-  ): { readonly environment: M3EnvironmentPublic; readonly scopes: ReadonlyArray<string> } | null {
+  ): { readonly environment: ZZZEnvironmentPublic; readonly scopes: ReadonlyArray<string> } | null {
     this.pruneExpiredPairings(now);
     const normalized = code.trim().toUpperCase();
     const row = this.#db
-      .prepare("SELECT * FROM m3_pairing_codes WHERE code = ? AND expires_at > ?")
+      .prepare("SELECT * FROM zzz_pairing_codes WHERE code = ? AND expires_at > ?")
       .get(normalized, now) as Record<string, unknown> | undefined;
     if (!row) return null;
     const deleted = this.#db
-      .prepare("DELETE FROM m3_pairing_codes WHERE code = ?")
+      .prepare("DELETE FROM zzz_pairing_codes WHERE code = ?")
       .run(normalized);
     if (Number(deleted.changes) === 0) return null;
     const environment = this.getEnvironment(String(row.environment_id), now);
@@ -178,10 +178,10 @@ export class M3ServerStore {
   }
 
   pruneExpiredPairings(now = Date.now()): void {
-    this.#db.prepare("DELETE FROM m3_pairing_codes WHERE expires_at <= ?").run(now);
+    this.#db.prepare("DELETE FROM zzz_pairing_codes WHERE expires_at <= ?").run(now);
   }
 
-  #rowToEnv(row: Record<string, unknown>, now: number): M3EnvironmentPublic {
+  #rowToEnv(row: Record<string, unknown>, now: number): ZZZEnvironmentPublic {
     const lastSeenAt = Number(row.last_seen_at);
     return {
       id: String(row.id),

@@ -1679,7 +1679,7 @@ it.layer(
         checkedAt: "2026-10-03T00:02:00.000Z",
         status: "ready",
         version: "1.0.0",
-        message: "Pi is available, but M3 Code could not refresh its models and commands.",
+        message: "Pi is available, but ZZZ Code could not refresh its models and commands.",
       } satisfies ServerProvider;
 
       it("retains Pi inventories during incomplete probes without restoring removed custom models", () => {
@@ -2757,20 +2757,25 @@ it.layer(
         return yield* effect(shell);
       }).pipe(Effect.scoped, Effect.provide(NodeServices.layer));
 
-    it.effect.each([
-      {
-        name: "Windows PATH",
-        platform: "win32" as const,
-        path: "C:\\Windows",
-        expectedPath: "C:\\Windows;C:\\Tools",
-      },
-      {
-        name: "login-shell PATH",
-        platform: "linux" as const,
-        path: "/usr/bin",
-        expectedPath: "/opt/late:/usr/bin",
-      },
-    ])("rebuilds only instances missing their CLI when a refresh finds a new $name", (host) =>
+    it.effect.each(
+      [
+        {
+          name: "Windows PATH",
+          platform: "win32" as const,
+          path: "C:\\Windows",
+          expectedPath: "C:\\Windows;C:\\Tools",
+        },
+        {
+          name: "login-shell PATH",
+          platform: "linux" as const,
+          path: "/usr/bin",
+          expectedPath: "/opt/late:/usr/bin",
+        },
+        // The login shell is a POSIX script, which only a POSIX host can run.
+      ].filter(
+        (host) => host.platform === "win32" || HostProcess.Platform.defaultValue() !== "win32",
+      ),
+    )("rebuilds only instances missing their CLI when a refresh finds a new $name", (host) =>
       withLateLoginShell((shell) => {
         const env: NodeJS.ProcessEnv = { PATH: host.path, SHELL: shell };
         return Effect.gen(function* () {
@@ -4014,7 +4019,7 @@ it.layer(
             status: "unchanged",
             finishedAt: "2026-04-14T00:01:30.000Z",
             message:
-              "Update command completed, but M3 Code still detects an outdated provider version.",
+              "Update command completed, but ZZZ Code still detects an outdated provider version.",
           } as const;
           yield* registry.setProviderMaintenanceActionState({
             instanceId: claudeInstanceId,
@@ -4439,23 +4444,27 @@ it.layer(
             ),
             Stream.filter((provider): provider is ServerProvider => provider !== undefined),
           );
-          const firstError = yield* Stream.toPull(
-            codexSnapshots.pipe(Stream.filter((provider) => provider.status === "error")),
-          );
+          // Collect from the start: a pull subscribes on its first read and can miss a change
+          // published just before it, which the slower probes on Windows make likely.
+          const seen = yield* Stream.toQueue(codexSnapshots, { capacity: "unbounded" });
+          const nextMatching = (matches: (provider: ServerProvider) => boolean) =>
+            Effect.gen(function* () {
+              while (true) {
+                const provider = yield* Queue.take(seen);
+                if (matches(provider)) return provider;
+              }
+            });
           const currentCodex = (yield* registry.getProviders).find(
             (provider) => provider.instanceId === "codex",
           );
           const initialCodex =
-            currentCodex?.status === "error" ? currentCodex : (yield* firstError)[0];
+            currentCodex?.status === "error"
+              ? currentCodex
+              : yield* nextMatching((provider) => provider.status === "error");
           assert.strictEqual(initialCodex?.status, "error");
           assert.strictEqual(initialCodex?.installed, false);
           assert.deepStrictEqual(spawnedCommands, [firstMissing]);
 
-          const pendingRebuild = yield* Stream.toPull(
-            codexSnapshots.pipe(
-              Stream.filter((provider) => provider.status === "warning" && !provider.installed),
-            ),
-          );
           yield* serverSettings.updateSettings({
             providerInstances: {
               ...disabledDefaultSlots("claudeAgent", "cursor", "grok", "opencode"),
@@ -4469,12 +4478,9 @@ it.layer(
           yield* Deferred.succeed(allowLazySettingsStream, undefined);
 
           yield* Deferred.await(secondProbeStarted);
-          yield* pendingRebuild;
-          const rebuiltError = yield* Stream.toPull(
-            codexSnapshots.pipe(Stream.filter((provider) => provider.status === "error")),
-          );
+          yield* nextMatching((provider) => provider.status === "warning" && !provider.installed);
           yield* Deferred.succeed(releaseSecondProbe, undefined);
-          const [reprobedCodex] = yield* rebuiltError;
+          const reprobedCodex = yield* nextMatching((provider) => provider.status === "error");
           assert.deepStrictEqual(spawnedCommands, [firstMissing, secondMissing]);
           assert.strictEqual(reprobedCodex?.status, "error");
           assert.strictEqual(reprobedCodex?.installed, false);

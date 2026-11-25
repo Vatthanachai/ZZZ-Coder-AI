@@ -2330,11 +2330,13 @@ export function ThreadsSettingsPanel() {
           serverScoped
           settingKeys={["textGenerationFallback"]}
           {...setting("text-generation-fallback")}
-          description="Where background writing goes when its model cannot run. Local models only never sends it to a cloud provider you did not choose."
+          description={gt(
+            "Where background writing goes when its model cannot run. Local models only never sends it to a cloud provider you did not choose.",
+          )}
           resetAction={
             settings.textGenerationFallback !== DEFAULT_UNIFIED_SETTINGS.textGenerationFallback ? (
               <SettingResetButton
-                ariaLabel="Reset text generation fallback"
+                ariaLabel={gt("Reset text generation fallback")}
                 onClick={() =>
                   updateSettings({
                     textGenerationFallback: DEFAULT_UNIFIED_SETTINGS.textGenerationFallback,
@@ -2352,15 +2354,21 @@ export function ThreadsSettingsPanel() {
                 }
               }}
             >
-              <SelectTrigger size="sm" className="w-full sm:w-56" aria-label="Fallback">
+              <SelectTrigger
+                size="sm"
+                className="w-full sm:w-56"
+                aria-label={gt("Fallback", { $context: "noun, where background writing goes" })}
+              >
                 <SelectValue>
-                  {(value: TextGenerationFallback) => TEXT_GENERATION_FALLBACK_LABELS[value]}
+                  {(value: TextGenerationFallback) =>
+                    messages(TEXT_GENERATION_FALLBACK_LABELS[value])
+                  }
                 </SelectValue>
               </SelectTrigger>
               <SelectPopup align="end" alignItemWithTrigger={false}>
                 {TEXT_GENERATION_FALLBACKS.map((value) => (
                   <SelectItem key={value} hideIndicator value={value}>
-                    {TEXT_GENERATION_FALLBACK_LABELS[value]}
+                    {messages(TEXT_GENERATION_FALLBACK_LABELS[value])}
                   </SelectItem>
                 ))}
               </SelectPopup>
@@ -2431,9 +2439,9 @@ export function ThreadsSettingsPanel() {
 
 const TEXT_GENERATION_FALLBACKS = ["local", "any", "none"] as const;
 const TEXT_GENERATION_FALLBACK_LABELS: Record<TextGenerationFallback, string> = {
-  local: "Local models only",
-  any: "Any provider",
-  none: "Don't fall back",
+  local: msg("Local models only"),
+  any: msg("Any provider"),
+  none: msg("Don't fall back"),
 };
 
 export function MaintenanceSettingsPanel() {
@@ -2655,7 +2663,7 @@ export function AboutSettingsPanel() {
         />
         <SettingsRow
           {...setting("open-source-licenses")}
-          description={gt("Notices for dependencies, assets, and optional tools used by M3 Code.")}
+          description={gt("Notices for dependencies, assets, and optional tools used by ZZZ Code.")}
           control={
             <Button
               render={<Link to="/settings/open-source-licenses" />}

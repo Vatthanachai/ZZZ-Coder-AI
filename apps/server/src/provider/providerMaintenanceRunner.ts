@@ -575,7 +575,7 @@ export const make = Effect.fn("ProviderMaintenanceRunner.make")(function* () {
                   message:
                     targetVersion !== undefined
                       ? "This version is no longer recommended or this installer cannot install a specific version. Refresh provider settings."
-                      : "The latest provider version is incompatible with this M3 Code release. Review provider settings.",
+                      : "The latest provider version is incompatible with this ZZZ Code release. Review provider settings.",
                 }),
               );
             }
@@ -689,9 +689,9 @@ export const make = Effect.fn("ProviderMaintenanceRunner.make")(function* () {
                 startedAt,
                 finishedAt,
                 message: couldNotVerify
-                  ? "Update command completed, but M3 Code could not verify the provider version."
+                  ? "Update command completed, but ZZZ Code could not verify the provider version."
                   : stillOutdated
-                    ? "Update command completed, but M3 Code still detects an outdated provider version."
+                    ? "Update command completed, but ZZZ Code still detects an outdated provider version."
                     : needsOpenCodeServerRestart(verifiedProviders)
                       ? OPENCODE_SERVER_RESTART_MESSAGE
                       : "Provider updated.",

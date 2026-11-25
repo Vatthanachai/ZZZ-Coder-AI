@@ -321,13 +321,6 @@ function piToolOutput(result: unknown, toolName: string): unknown {
   };
 }
 
-function providerRef(
-  nativeId: string,
-  strength: "strong" | "weak" = "strong",
-): OrchestrationV2ProviderRef {
-  return { driver: PI_PROVIDER, nativeId, strength };
-}
-
 const PI_THINKING_LEVELS = new Set(["off", "minimal", "low", "medium", "high", "xhigh", "max"]);
 
 interface PiStreamItemState {
@@ -3369,7 +3362,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           // Pi before 0.99 acknowledges a handled extension command without a disposition.
           const disposition = recordString(result, "disposition");
           if (disposition !== undefined && disposition !== "handled") {
-            return yield* protocolError("M3 Code's Pi extension did not apply the service tier");
+            return yield* protocolError("ZZZ Code's Pi extension did not apply the service tier");
           }
           serviceTierMayBeSet = serviceTier !== null;
         }

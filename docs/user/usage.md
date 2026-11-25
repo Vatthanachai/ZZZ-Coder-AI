@@ -68,7 +68,7 @@ update model pricing.
 
 ## Local compute
 
-Below Cost and Tokens, **Local compute** shows the requests M3 Code's gateway sent to your
+Below Cost and Tokens, **Local compute** shows the requests ZZZ Code's gateway sent to your
 registered inference servers in the past 24 hours or 7 days. See
 [Local models](./local-models.md#see-what-your-hardware-did).
 

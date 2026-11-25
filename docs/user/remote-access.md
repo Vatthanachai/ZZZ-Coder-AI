@@ -1,6 +1,6 @@
 # Remote access
 
-Connect a phone, browser, or another desktop app to M3 Code running on a different
+Connect a phone, browser, or another desktop app to ZZZ Code running on a different
 machine. That machine must stay running and reachable while you work.
 
 ## T3 Connect
@@ -17,7 +17,7 @@ t3 up
 
 It asks how your other devices reach the machine: T3 Connect, the local network,
 or both. Choose T3 Connect and follow the sign-in instructions. It then runs
-M3 Code as a [background service](./background-service.md).
+ZZZ Code as a [background service](./background-service.md).
 `t3 connect` is the same as `t3 up --connect`. Run `t3 up` again to change your
 choice, and `t3 status` to see it.
 
@@ -60,7 +60,7 @@ settings page, or with `t3 auth connect-device revoke <code>`. With approval on,
 it has to ask again. With approval off, it can connect again on its own, so
 revoking in the app offers to turn approval on first. Devices that connected through T3 Connect while approval was off stay
 approved and appear in that list for you to review. A device that has not
-connected since you updated M3 Code asks for approval like a new one. Older apps
+connected since you updated ZZZ Code asks for approval like a new one. Older apps
 cannot show the code, so update them before you turn approval on.
 
 ### Scripts and agents
@@ -102,7 +102,7 @@ For a command-line host, choose the local network in `t3 up`, or run:
 t3 up --lan
 ```
 
-For a server in a terminal, run `t3 serve --lan`. Either way, M3 Code then
+For a server in a terminal, run `t3 serve --lan`. Either way, ZZZ Code then
 accepts connections from your local network and tailnet, so a pairing code is
 all that keeps other devices on them out.
 
@@ -146,7 +146,7 @@ that machine does not have yet; add that address with **Add route** instead.
 Pairing again over an address the machine already has still works. A new route
 is placed by speed, in that order, and you can reorder routes at any time.
 
-While connected through T3 Connect or a paired address, M3 Code also learns the
+While connected through T3 Connect or a paired address, ZZZ Code also learns the
 machine's current LAN and Tailscale addresses and adds them as routes, so
 pairing once through T3 Connect is enough to use the LAN at home. When the
 machine's LAN address changes, for example after it joins another Wi-Fi network,
@@ -157,10 +157,10 @@ You can reorder a learned route, but not remove it; it
 goes away with the route it was learned through, or when the machine stops
 reporting that address.
 
-M3 Code connects over the first route that answers. Away from home, a LAN
+ZZZ Code connects over the first route that answers. Away from home, a LAN
 address that does not answer is checked briefly and skipped. It is only tried
 again, after the other routes, if none of them connect. While connected over a
-later route, M3 Code checks the earlier ones when your network changes, when you
+later route, ZZZ Code checks the earlier ones when your network changes, when you
 return to the app, and every minute, and moves back as soon as one works. A
 route whose machine refused this device's sign-in is marked **Sign-in
 refused**; pair that address again with **Add route** to use it.
@@ -203,9 +203,9 @@ HTTPS** in **Settings → Sharing & access**. Turn it off there to remove that r
 
 Your tailnet needs MagicDNS and HTTPS certificates enabled; see
 [Tailscale's HTTPS setup](https://tailscale.com/docs/how-to/set-up-https-certificates).
-On Linux, M3 Code also needs permission to manage Tailscale; see
+On Linux, ZZZ Code also needs permission to manage Tailscale; see
 [operator permission](https://tailscale.com/docs/reference/troubleshooting/linux/linux-operator-permission)
-for non-root users. If any of these is missing, M3 Code still starts but can't
+for non-root users. If any of these is missing, ZZZ Code still starts but can't
 add the HTTPS route.
 
 To start a command-line server with Tailscale HTTPS:
@@ -245,13 +245,13 @@ scheme uses HTTP, so include `https://` when your server uses HTTPS.
 ## Desktop-managed SSH
 
 In the desktop app, open **Settings → Environments → Add environment**, choose
-**SSH**, and enter a host or SSH alias such as `user@example.com`. M3 Code starts
+**SSH**, and enter a host or SSH alias such as `user@example.com`. ZZZ Code starts
 or reuses a server there and opens the port forward for you. Projects, provider
 credentials, and agent work stay on the remote machine.
 
 The remote host must be Linux or an Apple Silicon Mac with `curl` or `wget`,
 `tar`, `sha256sum` or `shasum`, and [provider setup](./install.md#providers).
-The first launch downloads M3 Code's server to `~/.t3/runtime` on the host, so
+The first launch downloads ZZZ Code's server to `~/.t3/runtime` on the host, so
 it takes longer than later ones.
 Provider CLIs must be on the `PATH` of a non-interactive login shell there;
 check with:
@@ -260,7 +260,7 @@ check with:
 ssh user@example.com 'sh -lc "command -v claude codex"'
 ```
 
-M3 Code cannot answer a second sign-in prompt such as a Duo code. On macOS and
+ZZZ Code cannot answer a second sign-in prompt such as a Duo code. On macOS and
 Linux it can reuse a connection you signed in to in a terminal instead: turn on
 connection sharing for the host in `~/.ssh/config`, run `ssh <alias>`, then
 connect. When that connection closes, sign in again in a terminal and retry.
@@ -273,7 +273,7 @@ Host <alias>
 ```
 
 If SSH reconnecting fails after an app update, retry the launch once. Removing
-the connection stops a server that M3 Code launched; a server that was already
+the connection stops a server that ZZZ Code launched; a server that was already
 running is left alone.
 
 Each desktop app keeps one session on the host for its SSH connection and reuses
@@ -361,13 +361,13 @@ apps.
 ### Local servers
 
 The browser lists ports held by processes your terminals and agents started.
-M3 Code reads which process holds each port and never connects to it, so a
+ZZZ Code reads which process holds each port and never connects to it, so a
 listed port opens as `http://localhost:<port>` and might not be a web page. For
 an HTTPS server or a specific path, set the **Preview URL** on the project
-script that starts it; M3 Code checks that address and opens it as written.
+script that starts it; ZZZ Code checks that address and opens it as written.
 
 To stop listing ports, set `T3CODE_PORT_DISCOVERY=0` in the environment that
-starts the M3 Code server, such as
+starts the ZZZ Code server, such as
 [`service.env`](./background-service.md#configure-the-service-environment) for
 the background service, and restart it. Script preview URLs still appear.
 
@@ -411,7 +411,7 @@ environment of an already running T3 server.
 
 ## Connect an outside agent
 
-Claude Code, Codex, ChatGPT and other agents M3 Code did not start can drive
+Claude Code, Codex, ChatGPT and other agents ZZZ Code did not start can drive
 threads on an environment through its MCP server. See
 [outside agents](./outside-agents.md) for setup.
 
@@ -474,7 +474,7 @@ an address you trust: the code is sent there.
   offline or on an older T3 Code, Forget says so; revoke it in that machine's
   Sharing & access.
 - A link stays valid while agents use it. One unused for 30 days expires, as
-  does one to a machine on an older M3 Code after 30 days; link again with a
+  does one to a machine on an older ZZZ Code after 30 days; link again with a
   new pairing code.
 
 On web and desktop, **Settings → Environments** opens as a map of your machines:
@@ -645,7 +645,7 @@ already on, turn it off and on again. Either needs a client paired with
 `relay:read`, `relay:write`, and `relay:configure`. The desktop app's own session
 and the startup pairing link include all three; a pairing link created in
 **Settings → Sharing & access** needs `relay:configure` selected. You can also
-run `t3 connect link` on the host and then restart M3 Code there. A
+run `t3 connect link` on the host and then restart ZZZ Code there. A
 command-line host that released its tunnel when it last stopped may link itself
 again on its next start; run `t3 connect unlink` on that host to keep it off.
 Removing an environment from a device's connection settings only forgets it on
@@ -659,8 +659,8 @@ creates a replacement tunnel on its own. You do not need to pair again. Cleanup
 usually runs five to ten minutes after the tunnel goes down.
 
 T3 Connect also removes the tunnel of an environment running an older version of
-M3 Code once it has been offline for seven days. That environment shows a message
-asking you to update. Start M3 Code on that computer and update it to the latest
+ZZZ Code once it has been offline for seven days. That environment shows a message
+asking you to update. Start ZZZ Code on that computer and update it to the latest
 version; it reconnects at the same address without pairing again.
 
 On a command-line host, `t3 connect unlink` disables exposure while retaining
@@ -680,7 +680,7 @@ error, where the problem is, and how to fix it.
 
 If a computer should only drive work running elsewhere, turn off its local environment. In the
 desktop app, open **Settings → Environments** and switch off **Local
-environment**. M3 Code restarts without a local server: no local agents or terminals run, WSL
+environment**. ZZZ Code restarts without a local server: no local agents or terminals run, WSL
 backends stay off, and other devices can no longer connect to this computer. Your projects,
 history, and saved connections are kept, and you keep working through pairing, T3 Connect, or SSH.
 If a [background service](./background-service.md) on this computer uses the same T3 home, the

@@ -3,6 +3,7 @@ import type { ThreadRunSummary } from "@t3tools/client-runtime/state/models";
 import { useAtomValue } from "@effect/atom-react";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Atom } from "effect/reactivity";
+import { msg, T, useGT, useMessages } from "gt-react";
 import { OctagonPauseIcon } from "lucide-react";
 
 import { threadInferenceStopAtom } from "../../state/inference";
@@ -12,15 +13,9 @@ import type { ComposerBannerStackItem } from "./ComposerBannerStack";
 const NO_STOP = Atom.make(AsyncResult.initial<{ readonly stop: null }>());
 
 const TITLES: Record<InferenceStopReason, string> = {
-  loop: "Stopped a looping reply",
-  "reasoning-limit": "Stopped a reply that only reasoned",
-  idle: "Stopped a reply that went silent",
-};
-
-const WHY: Record<InferenceStopReason, string> = {
-  loop: "kept repeating the same text",
-  "reasoning-limit": "reasoned at length without answering",
-  idle: "stopped sending anything",
+  loop: msg("Stopped a looping reply"),
+  "reasoning-limit": msg("Stopped a reply that only reasoned"),
+  idle: msg("Stopped a reply that went silent"),
 };
 
 // A run that is still going may yet recover; the notice waits for it to end.
@@ -39,6 +34,8 @@ export function useInferenceStopBannerItem(
   onContinue: () => void,
   onChooseModel: () => void,
 ): ComposerBannerStackItem | null {
+  const gt = useGT();
+  const m = useMessages();
   const runKey = latestRun ? `${latestRun.runId}:${latestRun.status}` : "none";
   const result = useAtomValue(
     threadId === undefined || latestRun == null
@@ -60,15 +57,29 @@ export function useInferenceStopBannerItem(
     group: "attention",
     variant: "warning",
     icon: <OctagonPauseIcon />,
-    title: TITLES[stop.reason],
-    description: `${stop.model} on ${stop.serverId} ${WHY[stop.reason]}, so M3 Code stopped it and freed the server.`,
+    title: m(TITLES[stop.reason]),
+    description:
+      stop.reason === "loop"
+        ? gt(
+            "{model} on {serverId} kept repeating the same text, so ZZZ Code stopped it and freed the server.",
+            { model: stop.model, serverId: stop.serverId },
+          )
+        : stop.reason === "reasoning-limit"
+          ? gt(
+              "{model} on {serverId} reasoned at length without answering, so ZZZ Code stopped it and freed the server.",
+              { model: stop.model, serverId: stop.serverId },
+            )
+          : gt(
+              "{model} on {serverId} stopped sending anything, so ZZZ Code stopped it and freed the server.",
+              { model: stop.model, serverId: stop.serverId },
+            ),
     actions: (
       <>
         <Button size="xs" variant="ghost" onClick={onContinue}>
-          Continue
+          <T>Continue</T>
         </Button>
         <Button size="xs" variant="ghost" onClick={onChooseModel}>
-          Choose model
+          <T>Choose model</T>
         </Button>
       </>
     ),

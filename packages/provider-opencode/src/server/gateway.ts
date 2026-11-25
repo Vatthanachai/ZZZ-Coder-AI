@@ -145,9 +145,9 @@ export function openCodeGatewayStatusNote(
 ): string | undefined {
   if (resolution === undefined) return undefined;
   if (externalServer) {
-    return "M3 Code manages the linked inference server only for OpenCode servers it starts; clear the server URL to use it.";
+    return "ZZZ Code manages the linked inference server only for OpenCode servers it starts; clear the server URL to use it.";
   }
   if (!resolution.managed) return `${resolution.reason} OpenCode runs unmanaged.`;
   const { serverId, models } = resolution.server;
-  return `M3 Code manages ${openCodeGatewayProviderId(serverId)} with ${models.length} model${models.length === 1 ? "" : "s"}.`;
+  return `ZZZ Code manages ${openCodeGatewayProviderId(serverId)} with ${models.length} model${models.length === 1 ? "" : "s"}.`;
 }

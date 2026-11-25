@@ -5,6 +5,34 @@ changes on top of upstream [T3 Code](https://github.com/pingdotgg/t3code). It is
 `b90e554e0` (2026-11-06). Newest first. Every change to the client–server protocol is additive, so
 the official T3 Code mobile app keeps working against this fork's server.
 
+## 2026-11-25: Renamed the app from M3 Code to ZZZ Code
+
+- **User-visible name**: every "M3 Code" string (window titles, menus, installer metadata, artifact
+  filenames, CLI messages, docs, and all locale catalogs) now reads "ZZZ Code". Translation keys
+  were re-hashed in place so every existing translation carries over.
+- **Code identifiers**: `apps/m3-server` is now `apps/zzz-server` (`@t3tools/zzz-server`,
+  `vp run start:zzz-server`), with `ZZZ_SERVER_*` environment variables, `~/.zzz-server` data
+  directory, and `zzz_*` SQLite tables. `M3Wordmark` is now `ZZZWordmark` and draws a ZZZ mark;
+  `m3-code*.png` are now `zzz-code*.png` (the artwork itself still shows M3).
+- **E2EE**: the socket E2EE key-derivation labels changed from `m3code-e2ee-v1` to
+  `zzzcode-e2ee-v1`, so clients and servers must both be on this build to use encrypted remote control.
+- T3-derived functional identifiers (the `t3` CLI, `T3CODE_*`, `~/.t3`, `t3code://`, `com.t3tools.*`)
+  are unchanged, as before. The M3 rename had also renamed some of these by mistake; they are back:
+  the desktop's legacy V1 profile name (`T3 Code (Alpha)`), the T3 Connect troubleshooting headings
+  whose anchors are wire contracts, and the MCP tool-name matcher now also accepts the "ZZZ Code"
+  server display name.
+- **Fixes found while making `check:changed` pass on Windows**:
+  - Text generation with "Any provider" no longer fails when no fallback exists; it runs the chosen
+    model as before (the fallback condition had been inverted in a merge).
+  - Checkpoint restore no longer fails on Windows because Git lists the working directory as `./`,
+    and the empty-tree lookup no longer passes `NUL` from a subdirectory.
+  - `t3 theme set` refuses a destination directory that appears mid-publish on Windows too.
+  - Pi's MCP extension write retries briefly when Windows blocks the rename for a reader.
+  - A PATH refresh no longer asks for an empty instance rebuild.
+  - Generated third-party notices use `/` paths on every build host.
+  - Re-enabled linting for the fork's new UI copy: Inference servers, Add project, the text
+    generation fallback setting and the inference stop banner are now translated in every locale.
+
 ## 2026-11-24: Antigravity CLI update/path fixes, direct MCP wizard, and self-hosted M3 Server
 
 - **Antigravity CLI settings & one-click update**: allowed custom `binaryPath` overrides to point at

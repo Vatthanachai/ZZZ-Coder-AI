@@ -57,3 +57,6 @@ node_modules/
 /E2EE_HANDOFF.md
 /docs/handoffs/
 /plan.md
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

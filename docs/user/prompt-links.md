@@ -1,6 +1,6 @@
 # Prompt links
 
-A prompt link opens M3 Code with a prompt ready to send. Use one to share a prompt on social
+A prompt link opens ZZZ Code with a prompt ready to send. Use one to share a prompt on social
 media, or to put a one-click fix in a pull request comment.
 
 A link never runs anything. It opens a draft. You read the prompt, then press Send. A link cannot
@@ -41,24 +41,24 @@ this step next time.
   counts only for its own owner. When you do not have the repository, choose **Clone** or **Use
   without project**.
 - **`provider` and `model`**: used when you have that provider set up. Otherwise your default
-  model is used, and M3 Code tells you.
+  model is used, and ZZZ Code tells you.
 - **`pr`**: opens the thread linked to that pull request on any connected machine, with the prompt
   in its composer. When no thread is linked, the draft goes on the pull request branch in a new
-  worktree. M3 Code checks the code out only after you confirm, because the checkout runs your
+  worktree. ZZZ Code checks the code out only after you confirm, because the checkout runs your
   setup script on it.
 
 A thread link with a prompt, such as `https://app.t3.codes/<environment>/<thread>?prompt=…`,
-puts the prompt in that thread's composer. If you already typed a draft there, M3 Code asks
+puts the prompt in that thread's composer. If you already typed a draft there, ZZZ Code asks
 before it replaces it.
 
-M3 Code removes characters you cannot see, such as zero-width and hidden tag characters, because
-they can hide instructions for the agent. When a prompt had them, M3 Code warns you that it may be
+ZZZ Code removes characters you cannot see, such as zero-width and hidden tag characters, because
+they can hide instructions for the agent. When a prompt had them, ZZZ Code warns you that it may be
 malicious.
 
 ## Share a thread
 
 **Copy thread** copies a link such as `https://app.t3.codes/threads/<environment>/<thread>`. Paste
-it anywhere, such as Slack, a GitHub comment, or your notes. On a phone with M3 Code installed, it
+it anywhere, such as Slack, a GitHub comment, or your notes. On a phone with ZZZ Code installed, it
 opens the thread in the app. Elsewhere, opening it asks where to open it, like a prompt link, then
-opens the thread. Only someone connected to the machine that runs the thread can see it. In M3 Code,
+opens the thread. Only someone connected to the machine that runs the thread can see it. In ZZZ Code,
 a thread link in a message opens the thread in the app.

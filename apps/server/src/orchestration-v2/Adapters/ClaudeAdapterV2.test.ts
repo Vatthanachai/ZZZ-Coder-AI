@@ -918,7 +918,7 @@ describe("ClaudeAdapterV2 native protocol logging", () => {
     assert.equal(systemPrompt.preset, "claude_code");
     assert.include(systemPrompt.append ?? "", "Use `delegate_task`");
     assert.include(systemPrompt.append ?? "", "call `t3_background_wait`");
-    assert.notInclude(systemPrompt.append ?? "", "## M3 Code devices");
+    assert.notInclude(systemPrompt.append ?? "", "## ZZZ Code devices");
     const logged = ClaudeAdapterV2.loggedClaudeQueryOptions(options);
     assert.equal(logged.hasMcpServers, true);
     assert.notInclude(JSON.stringify(logged), "secret-claude-token");
@@ -964,8 +964,8 @@ describe("ClaudeAdapterV2 T3 tool instructions", () => {
   });
 
   it("leaves the device block out without device access or without T3 tools", () => {
-    assert.notInclude(append({ mcp: true, deviceToolsAvailable: false }), "## M3 Code devices");
-    assert.notInclude(append({ mcp: false, deviceToolsAvailable: true }), "## M3 Code devices");
+    assert.notInclude(append({ mcp: true, deviceToolsAvailable: false }), "## ZZZ Code devices");
+    assert.notInclude(append({ mcp: false, deviceToolsAvailable: true }), "## ZZZ Code devices");
   });
 
   it("gives native subagents the device block only in a session with device access", async () => {
@@ -3286,7 +3286,8 @@ describe("ClaudeAdapterV2 native fork", () => {
 
       assert.equal(openedQueries[0]?.options.resume, forkedSessionId);
       assert.equal(openedQueries[0]?.options.sessionId, undefined);
-      assert.equal(openedQueries[0]?.options.cwd, NodePath.resolve("/workspace"));
+      // The fork opens in the runtime cwd as given, which Windows would otherwise give a drive.
+      assert.equal(openedQueries[0]?.options.cwd, "/workspace");
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
@@ -8727,7 +8728,11 @@ describe("ClaudeAdapterV2 background wake turns", () => {
     const makeInstall = Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "claude-program-" });
-      const link = NodePath.join(root, "claude");
+      // Windows only resolves an executable with a PATHEXT extension, as the installer writes it.
+      const link = NodePath.join(
+        root,
+        HostProcess.Platform.defaultValue() === "win32" ? "claude.exe" : "claude",
+      );
       const install = (version: string) => {
         const file = NodePath.join(root, version);
         NodeFS.writeFileSync(file, "#!/bin/sh\n", { mode: 0o755 });

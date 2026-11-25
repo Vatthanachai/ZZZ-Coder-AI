@@ -978,10 +978,10 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "text-generation-fallback",
-    title: "Text generation fallback",
+    title: msg("Text generation fallback"),
     to: "/settings/threads",
     scope: "environment",
-    searchTerms: ["local models only cloud privacy background writing titles commit messages"],
+    searchTerms: [msg("local models only cloud privacy background writing titles commit messages")],
   },
   {
     id: "thread-title-instructions",
@@ -1098,10 +1098,12 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "inference-servers",
-    title: "Inference servers",
+    title: msg("Inference servers"),
     to: "/settings/inference",
     searchTerms: [
-      "local models self-hosted model server gpu ollama lm studio llama.cpp vllm sglang openai compatible base url api key context window concurrency load queue",
+      msg(
+        "local models self-hosted model server gpu ollama lm studio llama.cpp vllm sglang openai compatible base url api key context window concurrency load queue",
+      ),
     ],
     providerSettingsOnly: true,
   },
@@ -1241,7 +1243,7 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "pull-request-links-open-in-app",
-    title: msg("Open pull requests in M3 Code"),
+    title: msg("Open pull requests in ZZZ Code"),
     to: "/settings/diffs",
     searchTerms: [
       `pr commit links ${SOURCE_CONTROL_HOST_LABELS} browser external click default pull request view panel`,

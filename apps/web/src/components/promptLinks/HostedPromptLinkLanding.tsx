@@ -50,7 +50,7 @@ function summarize(
           ? {
               title: resolve(msg("Open this thread")),
               description: resolve(
-                msg("It opens in M3 Code if you're connected to the machine it runs on."),
+                msg("It opens in ZZZ Code if you're connected to the machine it runs on."),
               ),
               prompt: null,
               details: [],
@@ -172,7 +172,7 @@ function HostedPromptLinkLanding({
           </AlertTitle>
           <AlertDescription>
             {gt(
-              "{count, plural, one {M3 Code removed {count} hidden character. Read the prompt before you send it.} other {M3 Code removed {count} hidden characters. Read the prompt before you send it.}}",
+              "{count, plural, one {ZZZ Code removed {count} hidden character. Read the prompt before you send it.} other {ZZZ Code removed {count} hidden characters. Read the prompt before you send it.}}",
               { count: prompt.hiddenCharacters },
             )}
           </AlertDescription>
@@ -196,7 +196,7 @@ function HostedPromptLinkLanding({
           </Button>
         ) : null}
         <Button variant="ghost" render={<a href={DESKTOP_DOWNLOAD_URL} />}>
-          <T>Get M3 Code</T>
+          <T>Get ZZZ Code</T>
         </Button>
       </div>
       <label className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">

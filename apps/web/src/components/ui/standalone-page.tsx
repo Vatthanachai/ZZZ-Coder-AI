@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { M3Wordmark } from "../M3Wordmark";
+import { ZZZWordmark } from "../ZZZWordmark";
 
 export function StandalonePage({ children }: { readonly children: ReactNode }) {
   return (
@@ -23,8 +23,8 @@ export function StandalonePageHeader({
   return (
     <>
       <div className="flex items-baseline justify-between gap-3 text-muted-foreground">
-        <span className="flex items-baseline gap-1.5" role="img" aria-label="M3 Code">
-          <M3Wordmark className="h-3 w-auto shrink-0 text-foreground" aria-hidden />
+        <span className="flex items-baseline gap-1.5" role="img" aria-label="ZZZ Code">
+          <ZZZWordmark className="h-3 w-auto shrink-0 text-foreground" aria-hidden />
           {/* oxlint-disable-next-line t3code/no-untranslated-copy -- product wordmark */}
           <span className="text-lg font-medium tracking-tight">Code</span>
         </span>

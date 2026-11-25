@@ -13,7 +13,7 @@
     "dev:desktop": "node scripts/dev-runner.ts dev:desktop",
     "migrate-dev-db": "node apps/server/scripts/migrate-dev-db.ts",
     "start": "vp run --filter t3 start",
-    "start:m3-server": "node apps/m3-server/src/bin.ts",
+    "start:zzz-server": "node apps/zzz-server/src/bin.ts",
     "start:desktop": "vp run --filter @t3tools/desktop start",
     "start:marketing": "vp run --filter @t3tools/marketing preview",
     "start:mock-update-server": "node scripts/mock-update-server.ts",

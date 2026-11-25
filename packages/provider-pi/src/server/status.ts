@@ -1,6 +1,5 @@
 import { resolveProviderProbeTimeoutMs } from "@t3tools/provider-core/server/snapshotProbe";
 import {
-  ProviderDriverKind,
   type CustomModelSetting,
   type ServerProvider,
   type ServerProviderModel,
@@ -481,7 +480,7 @@ export const buildInitialPiProviderSnapshot = Effect.fn(
         version: null,
         status: "warning",
         auth: { status: "unknown" },
-        message: `${flavor.displayName} is disabled in M3 Code settings.`,
+        message: `${flavor.displayName} is disabled in ZZZ Code settings.`,
       },
     });
   }
@@ -523,7 +522,7 @@ export const checkPiProviderStatus = Effect.fn("checkPiProviderStatus")(function
         version: null,
         status: "warning",
         auth: { status: "unknown" },
-        message: `${flavor.displayName} is disabled in M3 Code settings.`,
+        message: `${flavor.displayName} is disabled in ZZZ Code settings.`,
       },
     });
   }
@@ -608,7 +607,7 @@ export const checkPiProviderStatus = Effect.fn("checkPiProviderStatus")(function
         version: null,
         status: "error",
         auth: { status: "unknown" },
-        message: `M3 Code could not determine the ${flavor.displayName} version. Update ${flavor.displayName}, then refresh its status.`,
+        message: `ZZZ Code could not determine the ${flavor.displayName} version. Update ${flavor.displayName}, then refresh its status.`,
       },
     });
   }
@@ -684,7 +683,7 @@ export const checkPiProviderStatus = Effect.fn("checkPiProviderStatus")(function
         version,
         status: "ready",
         auth: { status: "unknown" },
-        message: `${flavor.displayName} is available, but M3 Code could not refresh its models and commands. The live session will retry startup.`,
+        message: `${flavor.displayName} is available, but ZZZ Code could not refresh its models and commands. The live session will retry startup.`,
       },
     });
   }

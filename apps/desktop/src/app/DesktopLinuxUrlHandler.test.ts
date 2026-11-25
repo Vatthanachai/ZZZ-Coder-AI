@@ -36,7 +36,7 @@ const makeEnvironment = (path: Path.Path, overrides: Record<string, unknown> = {
     platform: "linux",
     isPackaged: true,
     isDevelopment: false,
-    displayName: "M3 Code (Alpha)",
+    displayName: "ZZZ Code (Alpha)",
     linuxDesktopEntryName: "com.t3tools.T3Code.desktop",
     linuxApplicationsDir: "/home/alice/.local/share/applications",
     desktopLauncherPath: Option.none(),
@@ -186,14 +186,14 @@ const emptyRecording = (): RecordedRegistration => ({
 describe("DesktopLinuxUrlHandler", () => {
   it("renders a scheme-handler desktop entry with freedesktop Exec quoting", () => {
     const entry = DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
-      displayName: "M3 Code (Nightly)",
+      displayName: "ZZZ Code (Nightly)",
       execTarget: '/home/al ice/Apps/T3 "100%" $HOME\\x.AppImage',
       scheme: "t3code",
       iconPath: "/home/al ice/icons/T3\\x.png",
     });
 
     assert.include(entry, "[Desktop Entry]");
-    assert.include(entry, "Name=M3 Code (Nightly)");
+    assert.include(entry, "Name=ZZZ Code (Nightly)");
     assert.include(
       entry,
       'Exec="/home/al ice/Apps/T3 \\\\"100%%\\\\" \\\\$HOME\\\\\\\\x.AppImage" %U',
@@ -219,7 +219,7 @@ describe("DesktopLinuxUrlHandler", () => {
     for (const dir of ["/home/alice/Applications", '/home/al ice/My "100%" $Apps\\x']) {
       const previous = dir + "/" + from;
       const previousEntry = DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
-        displayName: "M3 Code (Beta)",
+        displayName: "ZZZ Code (Beta)",
         execTarget: previous,
         scheme: "t3code",
       });
@@ -275,7 +275,7 @@ describe("DesktopLinuxUrlHandler", () => {
       assert.include(
         recorded.files[0]?.content,
         DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
-          displayName: "M3 Code (Alpha)",
+          displayName: "ZZZ Code (Alpha)",
           execTarget: process.execPath,
           scheme: "t3code",
           iconPath: "/home/alice/.local/share/icons/com.t3tools.T3Code.desktop.png",
@@ -289,10 +289,10 @@ describe("DesktopLinuxUrlHandler", () => {
 
     return Effect.gen(function* () {
       yield* runRegister(recorded, {
-        environment: { desktopLauncherPath: Option.some("/opt/M3 Code/t3code") },
+        environment: { desktopLauncherPath: Option.some("/opt/ZZZ Code/t3code") },
       });
 
-      assert.include(recorded.files[0]?.content, 'Exec="/opt/M3 Code/t3code" %U');
+      assert.include(recorded.files[0]?.content, 'Exec="/opt/ZZZ Code/t3code" %U');
     });
   });
 
@@ -302,7 +302,7 @@ describe("DesktopLinuxUrlHandler", () => {
     return Effect.gen(function* () {
       yield* runRegister(recorded, {
         existingEntry: DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
-          displayName: "M3 Code (Alpha)",
+          displayName: "ZZZ Code (Alpha)",
           execTarget: "/home/alice/Applications/T3-Code.AppImage",
           scheme: "t3code",
           iconPath: "/home/alice/.local/share/icons/com.t3tools.T3Code.desktop.png",
@@ -331,7 +331,7 @@ describe("DesktopLinuxUrlHandler", () => {
       yield* runRegister(recorded, {
         iconSource: "/tmp/.mount_T3/resources/icon.png",
         existingEntry: DesktopLinuxUrlHandler.renderUrlHandlerDesktopEntry({
-          displayName: "M3 Code (Alpha)",
+          displayName: "ZZZ Code (Alpha)",
           execTarget: "/home/alice/Applications/T3-Code.AppImage",
           scheme: "t3code",
           iconPath,
@@ -605,65 +605,71 @@ const iconCacheRuns = (run: ThemeIconRun) =>
   run.commands.filter(({ command }) => command === "gtk-update-icon-cache").length;
 
 it.layer(NodeServices.layer)("DesktopLinuxUrlHandler theme icons", (it) => {
-  it.effect("installs both app id spellings without creating an icon cache", () =>
-    Effect.gen(function* () {
-      const fileSystem = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const icon = new Uint8Array([137, 80, 78, 71, 1, 2, 3]);
-      const fixture = yield* themeIconFixture(icon);
-      const run: ThemeIconRun = { root: fixture.root, commands: [] };
+  // The two app id spellings differ only in case, which Windows file names cannot tell apart.
+  it.effect.skipIf(HostProcess.Platform.defaultValue() === "win32")(
+    "installs both app id spellings without creating an icon cache",
+    () =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const icon = new Uint8Array([137, 80, 78, 71, 1, 2, 3]);
+        const fixture = yield* themeIconFixture(icon);
+        const run: ThemeIconRun = { root: fixture.root, commands: [] };
 
-      yield* registerWithRealFileSystem(run);
-      assert.deepEqual([...(yield* fileSystem.readDirectory(fixture.appsDir))].sort(), [
-        "com.t3tools.T3Code.png",
-        "com.t3tools.t3code.png",
-      ]);
-      for (const name of ["com.t3tools.t3code", "com.t3tools.T3Code"]) {
-        const target = path.join(fixture.appsDir, `${name}.png`);
-        assert.deepEqual([...(yield* fileSystem.readFile(target))], [...icon]);
-        yield* fileSystem.utimes(target, fixture.pastSeconds, fixture.pastSeconds);
-      }
+        yield* registerWithRealFileSystem(run);
+        assert.deepEqual([...(yield* fileSystem.readDirectory(fixture.appsDir))].sort(), [
+          "com.t3tools.T3Code.png",
+          "com.t3tools.t3code.png",
+        ]);
+        for (const name of ["com.t3tools.t3code", "com.t3tools.T3Code"]) {
+          const target = path.join(fixture.appsDir, `${name}.png`);
+          assert.deepEqual([...(yield* fileSystem.readFile(target))], [...icon]);
+          yield* fileSystem.utimes(target, fixture.pastSeconds, fixture.pastSeconds);
+        }
 
-      yield* registerWithRealFileSystem(run);
-      for (const name of ["com.t3tools.t3code", "com.t3tools.T3Code"]) {
-        const info = yield* fileSystem.stat(path.join(fixture.appsDir, `${name}.png`));
-        assert.equal(Option.getOrThrow(info.mtime).getTime(), fixture.pastSeconds * 1000);
-      }
-      assert.isFalse(yield* fileSystem.exists(fixture.cachePath));
-      assert.equal(iconCacheRuns(run), 0);
-    }),
+        yield* registerWithRealFileSystem(run);
+        for (const name of ["com.t3tools.t3code", "com.t3tools.T3Code"]) {
+          const info = yield* fileSystem.stat(path.join(fixture.appsDir, `${name}.png`));
+          assert.equal(Option.getOrThrow(info.mtime).getTime(), fixture.pastSeconds * 1000);
+        }
+        assert.isFalse(yield* fileSystem.exists(fixture.cachePath));
+        assert.equal(iconCacheRuns(run), 0);
+      }),
   );
 
-  it.effect("replaces same-length stale icons and refreshes an existing cache once", () =>
-    Effect.gen(function* () {
-      const fileSystem = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const fixture = yield* themeIconFixture(new Uint8Array([1, 2, 3]));
-      yield* fixture.seedCache;
-      const lower = path.join(fixture.appsDir, "com.t3tools.t3code.png");
-      const upper = path.join(fixture.appsDir, "com.t3tools.T3Code.png");
-      yield* fileSystem.writeFile(lower, new Uint8Array([3, 2, 1]));
-      yield* fileSystem.writeFile(upper, new Uint8Array([1, 2, 3]));
-      for (const target of [lower, upper]) {
-        yield* fileSystem.utimes(target, fixture.pastSeconds, fixture.pastSeconds);
-      }
-      const run: ThemeIconRun = {
-        root: fixture.root,
-        commands: [],
-        onIconCacheRefresh: fixture.rewriteCache,
-      };
+  // The two app id spellings differ only in case, which Windows file names cannot tell apart.
+  it.effect.skipIf(HostProcess.Platform.defaultValue() === "win32")(
+    "replaces same-length stale icons and refreshes an existing cache once",
+    () =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* themeIconFixture(new Uint8Array([1, 2, 3]));
+        yield* fixture.seedCache;
+        const lower = path.join(fixture.appsDir, "com.t3tools.t3code.png");
+        const upper = path.join(fixture.appsDir, "com.t3tools.T3Code.png");
+        yield* fileSystem.writeFile(lower, new Uint8Array([3, 2, 1]));
+        yield* fileSystem.writeFile(upper, new Uint8Array([1, 2, 3]));
+        for (const target of [lower, upper]) {
+          yield* fileSystem.utimes(target, fixture.pastSeconds, fixture.pastSeconds);
+        }
+        const run: ThemeIconRun = {
+          root: fixture.root,
+          commands: [],
+          onIconCacheRefresh: fixture.rewriteCache,
+        };
 
-      yield* registerWithRealFileSystem(run);
-      yield* registerWithRealFileSystem(run);
+        yield* registerWithRealFileSystem(run);
+        yield* registerWithRealFileSystem(run);
 
-      assert.deepEqual([...(yield* fileSystem.readFile(lower))], [1, 2, 3]);
-      const upperInfo = yield* fileSystem.stat(upper);
-      assert.equal(Option.getOrThrow(upperInfo.mtime).getTime(), fixture.pastSeconds * 1000);
-      assert.deepEqual(
-        run.commands.filter(({ command }) => command === "gtk-update-icon-cache"),
-        [{ command: "gtk-update-icon-cache", args: ["-f", "-t", fixture.hicolorDir] }],
-      );
-    }),
+        assert.deepEqual([...(yield* fileSystem.readFile(lower))], [1, 2, 3]);
+        const upperInfo = yield* fileSystem.stat(upper);
+        assert.equal(Option.getOrThrow(upperInfo.mtime).getTime(), fixture.pastSeconds * 1000);
+        assert.deepEqual(
+          run.commands.filter(({ command }) => command === "gtk-update-icon-cache"),
+          [{ command: "gtk-update-icon-cache", args: ["-f", "-t", fixture.hicolorDir] }],
+        );
+      }),
   );
 
   it.effect("refreshes when this launch changed an icon even if the cache looks newer", () =>

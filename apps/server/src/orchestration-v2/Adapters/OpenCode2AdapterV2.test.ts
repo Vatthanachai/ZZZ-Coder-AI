@@ -3224,7 +3224,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
       assert.equal(ended?.status, "failed");
       assert.equal(
         ended?.status === "failed" ? ended.failure.message : undefined,
-        "OpenCode is waiting on a request M3 Code couldn't answer.",
+        "OpenCode is waiting on a request ZZZ Code couldn't answer.",
       );
     }),
   );
@@ -5978,7 +5978,7 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
     }),
   );
 
-  // regression: #16142 OpenCode 2 threads were missing M3 Code's MCP tools
+  // regression: #16142 OpenCode 2 threads were missing ZZZ Code's MCP tools
   it.effect("names each thread's MCP server within OpenCode's limits, one name per thread", () =>
     Effect.gen(function* () {
       const project = "thread:project:ce04e4e2-6c29-4ff0-a1d7-b089dd63e258";
@@ -6092,9 +6092,9 @@ it.layer(McpProviderSessions.layer)("OpenCode2 adapter", (it) => {
           text: [
             index === 0 ? "What is in this image?" : "And this one?",
             `[Attached image "${attachment.name}" is saved at: ${path}]`,
-            `[Attached image "missing.png" is saved at: ${attachmentsDir}/${missing.id}.png]`,
-            `[Attached image "diagram.svg" is saved at: ${attachmentsDir}/${unsupported.id}.svg]`,
-            `[Attached file "requirements.pdf" is saved at: ${attachmentsDir}/${document.id}.pdf]`,
+            `[Attached image "missing.png" is saved at: ${resolveAttachmentPath({ attachmentsDir, attachment: missing })}]`,
+            `[Attached image "diagram.svg" is saved at: ${resolveAttachmentPath({ attachmentsDir, attachment: unsupported })}]`,
+            `[Attached file "requirements.pdf" is saved at: ${resolveAttachmentPath({ attachmentsDir, attachment: document })}]`,
           ].join("\n\n"),
         });
         if (external) {

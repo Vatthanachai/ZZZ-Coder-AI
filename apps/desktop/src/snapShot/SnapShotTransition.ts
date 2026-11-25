@@ -114,7 +114,7 @@ function createWindow(
     resizable: false,
     show: false,
     skipTaskbar: true,
-    title: "M3 Code Snapshot Animation",
+    title: "ZZZ Code Snapshot Animation",
     transparent: true,
     webPreferences: {
       backgroundThrottling: false,

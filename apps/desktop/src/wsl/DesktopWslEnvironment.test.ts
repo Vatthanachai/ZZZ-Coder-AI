@@ -13,6 +13,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { afterAll, expect } from "vite-plus/test";
 import * as NodeChildProcess from "node:child_process";
 
+import * as HostProcess from "@t3tools/shared/HostProcess";
 import { ManagedPolicyFileError } from "@t3tools/shared/managedPolicyFile";
 
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
@@ -37,8 +38,10 @@ import {
 const REQUIRED_SHELL_TOOLS = ["flock", "sha256sum", "tar", "mktemp"] as const;
 
 const posixShellRunner = (() => {
+  // On Windows a bare "bash" resolves to System32's WSL launcher, which is not a local shell.
+  const onWindowsHost = HostProcess.Platform.defaultValue() === "win32";
   const candidates = [
-    { file: "bash", args: [] as ReadonlyArray<string> },
+    ...(onWindowsHost ? [] : [{ file: "bash", args: [] as ReadonlyArray<string> }]),
     { file: "wsl.exe", args: ["-e", "bash"] as ReadonlyArray<string> },
   ];
   const probe = [

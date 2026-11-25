@@ -1,6 +1,7 @@
 import { tokenizeCliArgs } from "@t3tools/shared/cliArgs";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Schedule from "effect/Schedule";
 
 import type { ManagedInferenceServer } from "@t3tools/provider-core/server/inferenceGateway";
 import type {
@@ -127,7 +128,7 @@ export function resolvePiLaunchArgs(launchArgs: string): PiLaunchArgsResolution 
     if (reserved !== undefined) {
       return {
         ok: false,
-        message: `Pi launch argument '${reserved}' is controlled by M3 Code and cannot be overridden.`,
+        message: `Pi launch argument '${reserved}' is controlled by ZZZ Code and cannot be overridden.`,
       };
     }
     if (arg === "--") {
@@ -161,7 +162,7 @@ export function resolvePiLaunchArgs(launchArgs: string): PiLaunchArgsResolution 
       continue;
     }
     if (arg.startsWith("-")) {
-      return { ok: false, message: `Pi launch argument '${arg}' is not supported by M3 Code.` };
+      return { ok: false, message: `Pi launch argument '${arg}' is not supported by ZZZ Code.` };
     }
     return {
       ok: false,
@@ -263,7 +264,10 @@ export const materializePiT3McpExtension = Effect.fn("materializePiT3McpExtensio
         const stagingDir = yield* fs.makeTempDirectoryScoped({ directory: cacheDir });
         const staging = `${stagingDir.replace(/\\/g, "/")}/${PI_T3_MCP_EXTENSION_FILENAME}`;
         yield* fs.writeFileString(staging, PI_T3_MCP_EXTENSION_SOURCE);
-        yield* fs.rename(staging, dest).pipe(Effect.retry({ times: 3 }));
+        // Windows refuses to rename over a file another launch is reading; wait it out briefly.
+        yield* fs
+          .rename(staging, dest)
+          .pipe(Effect.retry({ times: 20, schedule: Schedule.spaced("10 millis") }));
       }),
     );
   }

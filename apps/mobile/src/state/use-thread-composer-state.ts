@@ -769,9 +769,6 @@ export function useThreadComposerState(input: {
       alertModelUnavailable();
       return null;
     }
-    const provider = serverConfig?.providers.find(
-      (entry) => entry.instanceId === modelSelection.instanceId,
-    );
     if (beforeDispatch !== undefined) {
       const response = await beforeDispatch(
         text,
@@ -887,7 +884,7 @@ export function useThreadComposerState(input: {
     if (serverConfig.environment.capabilities.sideChats !== true) {
       return resolve(
         msg("Update this environment's {product} server to use side chats.", {
-          product: "M3 Code",
+          product: "ZZZ Code",
         }),
       );
     }

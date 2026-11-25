@@ -3,6 +3,10 @@ import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 
+// Task commands and cwds are cache keys, so they read the same on every host.
+const posixRelative = (from: string, to: string) =>
+  NodePath.relative(from, to).split(NodePath.sep).join("/");
+
 interface CachedTestTask {
   command: string;
   cwd?: string;
@@ -129,8 +133,8 @@ export function cachedTestTasks(
       const key = NodeCrypto.createHash("sha256").update(group.join("\0")).digest("hex");
       tasks[`test-cache:${key}`] = {
         dependsOn: [runTask],
-        command: `${command} ${group.map((file) => `'${NodePath.relative(directory, NodePath.join(root, file)).replaceAll("'", "'\"'\"'")}'`).join(" ")}`,
-        ...(directory === root ? {} : { cwd: NodePath.relative(root, directory) }),
+        command: `${command} ${group.map((file) => `'${posixRelative(directory, NodePath.join(root, file)).replaceAll("'", "'\"'\"'")}'`).join(" ")}`,
+        ...(directory === root ? {} : { cwd: posixRelative(root, directory) }),
         cache: uncached.includes(group[0]!)
           ? false
           : {

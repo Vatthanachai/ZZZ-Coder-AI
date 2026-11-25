@@ -53,6 +53,10 @@ import * as CheckpointUntrackedBlobs from "./checkpointUntrackedBlobs.ts";
 import * as VcsDriver from "./VcsDriver.ts";
 import * as VcsProcess from "./VcsProcess.ts";
 
+// Git for Windows lists the working directory as "./" even though it refuses to remove it.
+const CLEAN_REMOVED = /^Removing (?!\.\/$)/m;
+const CLEAN_WOULD_REMOVE = /^Would remove (?!\.\/$)/m;
+
 export interface ExecuteGitInput {
   readonly operation: string;
   readonly cwd: string;
@@ -1336,9 +1340,9 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
         GIT_ALTERNATE_OBJECT_DIRECTORIES: quotedObjects.startsWith('"')
           ? quotedObjects
           : `"${quotedObjects}"`,
-        GIT_AUTHOR_NAME: "M3 Code",
+        GIT_AUTHOR_NAME: "ZZZ Code",
         GIT_AUTHOR_EMAIL: "t3code@users.noreply.github.com",
-        GIT_COMMITTER_NAME: "M3 Code",
+        GIT_COMMITTER_NAME: "ZZZ Code",
         GIT_COMMITTER_EMAIL: "t3code@users.noreply.github.com",
         // Any command on the scratch index can run the clean filter, not just add.
         ...VcsProcess.gitConfigEnv(hostEnv, "lfs.storage", privateLfs, hostPlatform),
@@ -2233,13 +2237,13 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
       // Removing a new .gitignore exposes the files it hid; clean again until nothing is left.
       for (
         let pass = 1;
-        pass < 4 && cleaned.exitCode === 0 && /^Removing /m.test(cleaned.stdout);
+        pass < 4 && cleaned.exitCode === 0 && CLEAN_REMOVED.test(cleaned.stdout);
         pass++
       ) {
         yield* recreateWorkspace;
         cleaned = yield* clean;
       }
-      if (cleaned.exitCode === 0 && /^Removing /m.test(cleaned.stdout)) {
+      if (cleaned.exitCode === 0 && CLEAN_REMOVED.test(cleaned.stdout)) {
         yield* recreateWorkspace;
         const remaining = yield* execute({
           operation,
@@ -2247,7 +2251,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
           args: [...longPaths, "clean", "-dn", "--", ...scope],
           env: { LC_ALL: "C" },
         });
-        if (/^Would remove /m.test(remaining.stdout)) {
+        if (CLEAN_WOULD_REMOVE.test(remaining.stdout)) {
           yield* resetIndex;
           return yield* new VcsProcessExitError({
             operation,

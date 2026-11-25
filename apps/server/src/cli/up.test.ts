@@ -17,6 +17,7 @@ import { afterEach, vi } from "vite-plus/test";
 
 import packageJson from "../../package.json" with { type: "json" };
 import * as BootService from "../cloud/bootService.ts";
+import { hostShellWord } from "./invocation.ts";
 import { upsertServiceEnv } from "./service.ts";
 import { connectEnabled, planRoutes, statusCommand, upCommand } from "./up.ts";
 
@@ -206,7 +207,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
     },
     {
       label: "a route turns off with no service to run",
-      prints: ["Run `t3 --base-dir <baseDir>` to use M3 Code here."],
+      prints: ["Run `t3 --base-dir <baseDir>` to use ZZZ Code here."],
       installed: false,
       env: "T3CODE_LAN=true\n",
       args: ["--no-lan"],
@@ -402,8 +403,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
           ),
         ),
       );
+      // Hints quote their arguments for the host shell: PowerShell on Windows, POSIX elsewhere.
+      const word = (value: string) => hostShellWord(HostProcess.Platform.defaultValue(), value);
       for (const line of input.prints ?? []) {
-        expect(lines.join("\n")).toContain(line.replace("<baseDir>", baseDir));
+        expect(lines.join("\n")).toContain(
+          line
+            .replace("--base-dir <baseDir>", `${word("--base-dir")} ${word(baseDir)}`)
+            .replace(" --no-lan", ` ${word("--no-lan")}`),
+        );
       }
       if (input.omits !== undefined) {
         expect(lines.join("\n")).not.toContain(input.omits);

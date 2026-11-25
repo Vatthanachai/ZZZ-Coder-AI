@@ -69,7 +69,7 @@ export const STANDARD_GRAY_DARK_PREVIEW_COLORS: ThemeCardPreviewColors = {
 export const STANDARD_THEME_CARDS: ReadonlyArray<ThemeCardDefinition> = [
   {
     id: "default",
-    label: "M3 Code",
+    label: "ZZZ Code",
     previews: (["light", "dark"] as const).map((mode) => ({
       mode,
       colors: STANDARD_THEME_PREVIEW_COLORS[mode],

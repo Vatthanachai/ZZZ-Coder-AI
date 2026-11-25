@@ -3,7 +3,7 @@ import { View } from "react-native";
 
 import { AppText as Text } from "../../components/ui/AppText";
 
-/** The guest's name above their message, where "Sent by M3 Code" sits for server messages. */
+/** The guest's name above their message, where "Sent by ZZZ Code" sits for server messages. */
 export function GuestMessageName(props: { readonly name: string }) {
   const gt = useGT();
   return (

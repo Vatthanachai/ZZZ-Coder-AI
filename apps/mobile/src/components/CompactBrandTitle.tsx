@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Platform, View } from "react-native";
 
 import { AppText as Text } from "./ui/AppText";
-import { M3Wordmark } from "./M3Wordmark";
+import { ZZZWordmark } from "./ZZZWordmark";
 import { IPAD_HOME_TITLE_OFFSET } from "../lib/layoutMetrics";
 import { resolveMobileStageLabel } from "../lib/mobileBranding";
 import { useAndroidControlSizing } from "./ui/useAndroidControlSizing";
@@ -42,7 +42,7 @@ export function CompactBrandTitle(
         props.fit && showStage ? (event) => setFullWidth(event.nativeEvent.layout.width) : undefined
       }
       aria-level={1}
-      accessibilityLabel={props.accessibilityLabel ?? gt("M3 Code, Threads")}
+      accessibilityLabel={props.accessibilityLabel ?? gt("ZZZ Code, Threads")}
       accessible
       role="heading"
       className="flex-row items-center gap-1.5"
@@ -52,7 +52,7 @@ export function CompactBrandTitle(
         props.fit && { flexShrink: 0 },
       ]}
     >
-      <M3Wordmark colorClassName="accent-icon" height={Math.round(15 * scale)} />
+      <ZZZWordmark colorClassName="accent-icon" height={Math.round(15 * scale)} />
       {/* A logo beside a fixed-size wordmark: it may grow with Dynamic Type, not crowd the bar. */}
       <Text
         allowFontScaling={props.allowFontScaling}

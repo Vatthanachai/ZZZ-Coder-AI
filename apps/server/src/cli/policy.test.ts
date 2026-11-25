@@ -47,14 +47,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))((it) => {
           return yield* describeRunningServer(statePath, current);
         });
 
-      assert.include(yield* describeRunningServer(statePath, installed), "No M3 Code server");
+      assert.include(yield* describeRunningServer(statePath, installed), "No ZZZ Code server");
       assert.include(yield* running(installed), "loaded this policy.");
       assert.include(
         yield* running(yield* loaded("Other Corp")),
         "loaded Other Corp's policy from /etc/t3code/policy.json",
       );
-      assert.include(yield* running(null), "loaded no policy. Restart M3 Code");
-      assert.include(yield* running(installed, null), "Restart M3 Code to apply");
+      assert.include(yield* running(null), "loaded no policy. Restart ZZZ Code");
+      assert.include(yield* running(installed, null), "Restart ZZZ Code to apply");
       assert.include(yield* running(null, null), "runs without a policy, as installed");
       assert.include(yield* running(undefined), "does not report which policy it loaded");
     }),

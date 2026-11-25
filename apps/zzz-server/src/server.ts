@@ -1,9 +1,9 @@
 import * as NodeCrypto from "node:crypto";
 import * as NodeHttp from "node:http";
 
-import { M3ServerStore, type RegisterEnvironmentInput } from "./store.ts";
+import { ZZZServerStore, type RegisterEnvironmentInput } from "./store.ts";
 
-export interface M3ServerOptions {
+export interface ZZZServerOptions {
   readonly host?: string;
   readonly port?: number;
   readonly token: string;
@@ -11,9 +11,9 @@ export interface M3ServerOptions {
   readonly onlineTtlMs?: number;
 }
 
-export interface RunningM3Server {
+export interface RunningZZZServer {
   readonly server: NodeHttp.Server;
-  readonly store: M3ServerStore;
+  readonly store: ZZZServerStore;
   readonly host: string;
   readonly port: number;
   readonly url: string;
@@ -83,17 +83,16 @@ function parseRegisterInput(body: unknown): RegisterEnvironmentInput | null {
       ? body.platform.trim()
       : null;
   const version =
-    typeof body.version === "string" && body.version.trim().length > 0
-      ? body.version.trim()
-      : null;
+    typeof body.version === "string" && body.version.trim().length > 0 ? body.version.trim() : null;
   return { id, label, endpoints, mcpUrl, e2eeFingerprint, platform, version };
 }
 
-export async function startM3Server(options: M3ServerOptions): Promise<RunningM3Server> {
+export async function startZZZServer(options: ZZZServerOptions): Promise<RunningZZZServer> {
   const host = options.host ?? "127.0.0.1";
-  const store = new M3ServerStore(options.dbPath, {
-    ...(options.onlineTtlMs === undefined ? {} : { onlineTtlMs: options.onlineTtlMs }),
-  });
+  const store = new ZZZServerStore(
+    options.dbPath,
+    options.onlineTtlMs === undefined ? {} : { onlineTtlMs: options.onlineTtlMs },
+  );
 
   const requireAuth = (req: NodeHttp.IncomingMessage, res: NodeHttp.ServerResponse): boolean => {
     const header = req.headers.authorization ?? "";
@@ -115,7 +114,7 @@ export async function startM3Server(options: M3ServerOptions): Promise<RunningM3
         const environments = store.listEnvironments();
         sendJson(res, 200, {
           ok: true,
-          service: "m3-server",
+          service: "zzz-server",
           environments: environments.length,
           online: environments.filter((env) => env.online).length,
         });
@@ -229,7 +228,8 @@ export async function startM3Server(options: M3ServerOptions): Promise<RunningM3
   });
 
   const address = server.address();
-  const actualPort = typeof address === "object" && address !== null ? address.port : (options.port ?? 8787);
+  const actualPort =
+    typeof address === "object" && address !== null ? address.port : (options.port ?? 8787);
   const url = `http://${host === "0.0.0.0" ? "127.0.0.1" : host}:${actualPort}`;
 
   return {

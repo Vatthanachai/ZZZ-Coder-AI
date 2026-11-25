@@ -1,21 +1,21 @@
 # Codex
 
-Use your ChatGPT plan or an existing Codex CLI login to code in M3 Code.
+Use your ChatGPT plan or an existing Codex CLI login to code in ZZZ Code.
 
 ## Connect with ChatGPT
 
 Connect during onboarding or in **Settings → Providers**. For a remote machine,
-select that environment first. M3 Code handles Codex installation; sign in on
+select that environment first. ZZZ Code handles Codex installation; sign in on
 OpenAI and allow sharing of your ChatGPT plan.
 
-Manage shared usage and credits in ChatGPT through **Manage usage** in M3 Code.
+Manage shared usage and credits in ChatGPT through **Manage usage** in ZZZ Code.
 If a request uses a feature that ChatGPT sharing does not support, use another
 provider for that request.
 
 Fast and Ultrafast speeds are unavailable with this connection. To use the speed
 options your account supports, [use an existing Codex login](#use-an-existing-codex-login).
 
-When reconnecting, choose the same account in M3 Code and on OpenAI's sign-in
+When reconnecting, choose the same account in ZZZ Code and on OpenAI's sign-in
 page. Disconnecting stops running threads but keeps their history and lets you
 reconnect later.
 
@@ -24,7 +24,7 @@ localhost page into the sign-in panel, even if that page could not load.
 
 ## Use an existing Codex login
 
-M3 Code can use your installed Codex and its existing login. Run `codex login`
+ZZZ Code can use your installed Codex and its existing login. Run `codex login`
 on the environment's machine to sign in. [Provider setup](./install.md#providers)
 covers installation and custom configuration.
 
@@ -42,7 +42,7 @@ for configuration and other providers.
 
 ## Generate images
 
-Codex can generate images directly in a M3 Code thread when your Codex version,
+Codex can generate images directly in a ZZZ Code thread when your Codex version,
 model, and account support native image generation.
 
 If Codex reports that its image tool is unavailable, image generation may be
@@ -53,7 +53,7 @@ Codex provider and add this to **Launch arguments**, keeping any other arguments
 -c features.image_generation=true
 ```
 
-This enables the feature for that M3 Code provider without changing your shared
+This enables the feature for that ZZZ Code provider without changing your shared
 Codex configuration. You do not need another provider instance or a separate image
 API key. The flag does not add image support to an unsupported model or account.
 
@@ -65,7 +65,7 @@ image appears in the thread.
 
 Add another ChatGPT account in **Settings → Providers**, then select the account
 from the thread's model picker. Compatible accounts can continue the same thread.
-Connecting accounts through M3 Code leaves your CLI login unchanged.
+Connecting accounts through ZZZ Code leaves your CLI login unchanged.
 
 ### Multiple CLI logins
 
@@ -88,7 +88,7 @@ Then add a second Codex instance in **Settings > Providers**:
 | Codex Work     | `~/.codex`      | Leave empty         |
 | Codex Personal | `~/.codex`      | `~/.codex_personal` |
 
-Both instances must use the same **CODEX_HOME path**. M3 Code prepares the shared
+Both instances must use the same **CODEX_HOME path**. ZZZ Code prepares the shared
 state in the shadow directory; do not populate it by copying your whole Codex
 home.
 
@@ -102,7 +102,7 @@ from the other home.
 
 ## Switch accounts in an existing thread
 
-Choose the other account from the thread's model picker. M3 Code offers compatible
+Choose the other account from the thread's model picker. ZZZ Code offers compatible
 Codex instances that share the thread's **CODEX_HOME path**. Changing accounts does
 not move the conversation into a separate Codex home.
 
@@ -144,14 +144,14 @@ Connecting ChatGPT in **Settings → Providers** signs in the Codex provider.
 Using your signed-in Chrome profile through the extension requires a browser
 connection for the current Codex thread.
 
-If a M3 Code thread reports `The browser access host is unavailable`, its browser
+If a ZZZ Code thread reports `The browser access host is unavailable`, its browser
 host is unavailable; this does not identify an extension connection failure.
 For a task that requested Chrome, follow [OpenAI's setup guide](https://learn.chatgpt.com/docs/chrome-extension),
 then select Chrome in a Codex chat in the ChatGPT desktop app.
 If the task runs on a remote environment, `localhost` in the desktop browser
 refers to your computer. Forward the remote page's port or use a URL reachable
-from your computer before repeating the task. Connecting to M3 Code through a
-relay or tunnel does not by itself expose that page. M3 Code's built-in browser
+from your computer before repeating the task. Connecting to ZZZ Code through a
+relay or tunnel does not by itself expose that page. ZZZ Code's built-in browser
 preview uses its own browser session.
 
 ## Use Daybreak

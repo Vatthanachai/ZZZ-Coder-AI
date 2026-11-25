@@ -160,7 +160,6 @@ import {
 } from "../lib/chatThreadActions";
 import {
   appendBrowsePathSegment,
-  ensureBrowseDirectoryPath,
   getBrowseDirectoryPath,
   hasTrailingPathSeparator,
   inferProjectTitleFromPath,
@@ -1403,7 +1402,7 @@ function OpenCommandPaletteDialog(props: {
       value: "action:triage",
       searchTerms: ["triage", "bug", "issue", "report", "broken", "debug", "help", "support"],
       title: gt("Triage an issue"),
-      description: gt("An agent investigates a M3 Code problem and helps file an issue"),
+      description: gt("An agent investigates a ZZZ Code problem and helps file an issue"),
       icon: <BugIcon className={ITEM_ICON_CLASS} />,
       run: () => startTriage(triageEnvironmentId),
     });
@@ -1642,7 +1641,7 @@ function OpenCommandPaletteDialog(props: {
       "remote",
       "machine",
     ],
-    title: "Add project",
+    title: gt("Add project"),
     icon: <FolderPlusIcon className={ITEM_ICON_CLASS} />,
     run: async () => {
       openAddProjectDialog();
@@ -1756,7 +1755,7 @@ function OpenCommandPaletteDialog(props: {
       "openclaw",
       "hermes",
     ],
-    title: gt("Use M3 Code in another app (MCP)"),
+    title: gt("Use ZZZ Code in another app (MCP)"),
     icon: <PlugIcon className={ITEM_ICON_CLASS} />,
     run: async () => {
       openUseInAnotherApp(
@@ -1825,7 +1824,7 @@ function OpenCommandPaletteDialog(props: {
       "server",
       "offline",
     ],
-    title: "Use a local model",
+    title: gt("Use a local model"),
     icon: <CpuIcon className={ITEM_ICON_CLASS} />,
     run: async () => {
       await navigate({ to: "/settings/inference", search: { setup: "local" } });

@@ -91,7 +91,7 @@ export class ThemeFileInvalidError extends Schema.TaggedError<ThemeFileInvalidEr
   { filePath: Schema.String, cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return `${this.filePath} is not a valid theme file. Use a theme exported from M3 Code, or a seeded file with name, appearance, canvas, and accent.`;
+    return `${this.filePath} is not a valid theme file. Use a theme exported from ZZZ Code, or a seeded file with name, appearance, canvas, and accent.`;
   }
 }
 
@@ -367,6 +367,11 @@ const publishThemeFile = Effect.fn(function* (input: {
       try {
         NodeFS.closeSync(fd);
         NodeFS.renameSync(destinationPath, rollbackPath);
+        // Windows lets a directory replace the placeholder file; put it back and refuse.
+        if (NodeFS.lstatSync(rollbackPath).isDirectory()) {
+          NodeFS.renameSync(rollbackPath, destinationPath);
+          throw new ThemeDestinationDirectoryError({ themeId, destinationPath });
+        }
         saved = true;
         return rollbackPath;
       } catch (error) {

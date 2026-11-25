@@ -191,6 +191,9 @@ function normalizeReplayFrame(value: unknown): unknown {
         ...params,
         clientInfo: {
           ...(params.clientInfo as Record<string, unknown>),
+          // Forks rebrand the client; fixtures keep the upstream name.
+          name: "<ignored>",
+          title: "<ignored>",
           version: "<ignored>",
         },
       };

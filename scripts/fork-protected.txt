@@ -1,4 +1,4 @@
-apps/mobile/src/components/M3Wordmark.tsx
+apps/mobile/src/components/ZZZWordmark.tsx
 apps/mobile/src/features/settings/SettingsInferenceRouteScreen.tsx
 apps/mobile/src/features/threads/ThreadLastInferenceRequest.tsx
 apps/mobile/src/features/usage/UsageLocalCompute.tsx
@@ -42,7 +42,7 @@ apps/server/src/provider/codexGateway.test.ts
 apps/server/src/provider/codexGateway.ts
 apps/server/src/textGeneration/TextGeneration.test.ts
 apps/web/src/components/AddProjectDialog.tsx
-apps/web/src/components/M3Wordmark.tsx
+apps/web/src/components/ZZZWordmark.tsx
 apps/web/src/components/chat/InferenceWaitStatus.tsx
 apps/web/src/components/chat/useInferenceOutageBannerItem.tsx
 apps/web/src/components/chat/useInferenceStopBannerItem.tsx
@@ -80,8 +80,8 @@ evals/mcp-tool-use/pi.ts
 evals/mcp-tool-use/templates/codex-local.json.gz
 evals/mcp-tool-use/templates/opencode.json.gz
 evals/mcp-tool-use/templates/pi.json.gz
-m3-code-box.png
-m3-code.png
+zzz-code-box.png
+zzz-code.png
 packages/client-runtime/src/state/inference.ts
 packages/client-runtime/src/state/inferenceActivity.test.ts
 packages/client-runtime/src/state/inferenceActivity.ts

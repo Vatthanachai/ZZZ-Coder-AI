@@ -155,7 +155,7 @@ it.layer(NodeServices.layer)("providerStatusCache", (it) => {
       version: null,
       status: "disabled",
       auth: { status: "unknown" },
-      message: "Codex is disabled in M3 Code settings.",
+      message: "Codex is disabled in ZZZ Code settings.",
     });
 
     assert.deepStrictEqual(

@@ -4,6 +4,7 @@ import * as NodeNet from "node:net";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import * as HostProcess from "@t3tools/shared/HostProcess";
 
 vi.mock("electron", () => ({
   nativeImage: {
@@ -15,6 +16,9 @@ vi.mock("electron", () => ({
 }));
 import { captureNiriWindow, checkNiriCaptureSupport, niriSocketPath } from "./NiriSnapShot.ts";
 import { captureLinuxWindow, getLinuxCaptureSupport } from "./LinuxSnapShot.ts";
+
+// Niri's IPC is a Unix socket path, which Windows cannot listen on.
+const onWindowsHost = HostProcess.Platform.defaultValue() === "win32";
 
 const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0]);
 const window = {
@@ -106,60 +110,70 @@ afterEach(async () => {
   await NodeFSP.rm(directory, { recursive: true, force: true });
 });
 
-it("selects the native adapter without needing a portal or GNOME extension", async () => {
-  expect(await getLinuxCaptureSupport("com.t3tools.T3Code")).toEqual({
-    linuxBackend: "niri",
-    linuxFeedbackAvailable: false,
-  });
-  const snapshot = await captureLinuxWindow("com.t3tools.T3Code");
-  expect(snapshot?.png).toEqual(png);
-  expect(snapshot?.window).toMatchObject({
-    processId: 123,
-    title: "Editor",
-    accessibilityBoundsReliable: false,
-  });
-  expect(calls).toContainEqual({
-    Action: {
-      ScreenshotWindow: { id: 42, path: capturePath, write_to_disk: true, show_pointer: false },
-    },
-  });
-  expect(snapshot?.feedback?.animationStarted).toBe(false);
-  expect(await NodeFSP.stat(NodePath.dirname(capturePath!)).catch(() => undefined)).toBeUndefined();
-});
+it.skipIf(onWindowsHost)(
+  "selects the native adapter without needing a portal or GNOME extension",
+  async () => {
+    expect(await getLinuxCaptureSupport("com.t3tools.T3Code")).toEqual({
+      linuxBackend: "niri",
+      linuxFeedbackAvailable: false,
+    });
+    const snapshot = await captureLinuxWindow("com.t3tools.T3Code");
+    expect(snapshot?.png).toEqual(png);
+    expect(snapshot?.window).toMatchObject({
+      processId: 123,
+      title: "Editor",
+      accessibilityBoundsReliable: false,
+    });
+    expect(calls).toContainEqual({
+      Action: {
+        ScreenshotWindow: { id: 42, path: capturePath, write_to_disk: true, show_pointer: false },
+      },
+    });
+    expect(snapshot?.feedback?.animationStarted).toBe(false);
+    expect(
+      await NodeFSP.stat(NodePath.dirname(capturePath!)).catch(() => undefined),
+    ).toBeUndefined();
+  },
+);
 
-it("does not activate T3 until requested, then matches PID and title", async () => {
-  const snapshot = await captureNiriWindow(socketPath);
-  expect(calls.some((call) => typeof call !== "string" && call.Action.FocusWindow)).toBe(false);
-  windows = [
-    { ...window, id: 1, pid: 999, title: "M3 Code" },
-    { ...window, id: 2, pid: process.pid, title: "Other T3" },
-    { ...window, id: 3, pid: process.pid, title: "M3 Code" },
-  ];
-  await snapshot.feedback!.activate("M3 Code");
-  expect(calls).toContainEqual({ Action: { FocusWindow: { id: 3 } } });
-});
+it.skipIf(onWindowsHost)(
+  "does not activate T3 until requested, then matches PID and title",
+  async () => {
+    const snapshot = await captureNiriWindow(socketPath);
+    expect(calls.some((call) => typeof call !== "string" && call.Action.FocusWindow)).toBe(false);
+    windows = [
+      { ...window, id: 1, pid: 999, title: "ZZZ Code" },
+      { ...window, id: 2, pid: process.pid, title: "Other T3" },
+      { ...window, id: 3, pid: process.pid, title: "ZZZ Code" },
+    ];
+    await snapshot.feedback!.activate("ZZZ Code");
+    expect(calls).toContainEqual({ Action: { FocusWindow: { id: 3 } } });
+  },
+);
 
-it("waits for the restored T3 window to map instead of polling", async () => {
+it.skipIf(onWindowsHost)("waits for the restored T3 window to map instead of polling", async () => {
   const snapshot = await captureNiriWindow(socketPath);
   const original = handler;
   handler = async (request, socket) => {
     await original(request, socket);
     if (request === "EventStream")
       send(socket, {
-        WindowOpenedOrChanged: { window: { ...window, id: 4, pid: process.pid, title: "M3 Code" } },
+        WindowOpenedOrChanged: {
+          window: { ...window, id: 4, pid: process.pid, title: "ZZZ Code" },
+        },
       });
   };
-  await snapshot.feedback!.activate("M3 Code");
+  await snapshot.feedback!.activate("ZZZ Code");
   expect(calls).toContainEqual({ Action: { FocusWindow: { id: 4 } } });
 });
 
-it("rejects ambiguous activation targets", async () => {
+it.skipIf(onWindowsHost)("rejects ambiguous activation targets", async () => {
   const snapshot = await captureNiriWindow(socketPath);
-  windows = [1, 2].map((id) => ({ ...window, id, pid: process.pid, title: "M3 Code" }));
-  await expect(snapshot.feedback!.activate("M3 Code")).rejects.toThrow("More than one");
+  windows = [1, 2].map((id) => ({ ...window, id, pid: process.pid, title: "ZZZ Code" }));
+  await expect(snapshot.feedback!.activate("ZZZ Code")).rejects.toThrow("More than one");
 });
 
-it("cancels pending activation when capture feedback is closed", async () => {
+it.skipIf(onWindowsHost)("cancels pending activation when capture feedback is closed", async () => {
   const snapshot = await captureNiriWindow(socketPath);
   const started = Promise.withResolvers<void>();
   const original = handler;
@@ -167,49 +181,66 @@ it("cancels pending activation when capture feedback is closed", async () => {
     await original(request, socket);
     if (request === "EventStream") started.resolve();
   };
-  const activation = expect(snapshot.feedback!.activate("M3 Code")).rejects.toThrow("cancelled");
+  const activation = expect(snapshot.feedback!.activate("ZZZ Code")).rejects.toThrow("cancelled");
   await started.promise;
   snapshot.feedback!.close();
   await activation;
   expect(calls.some((call) => typeof call !== "string" && call.Action.FocusWindow)).toBe(false);
 });
 
-it("does not attach accessibility identity if the captured window changed", async () => {
-  windows = [{ ...window, title: "Different document" }];
-  const snapshot = await captureNiriWindow(socketPath);
-  expect(snapshot.png).toEqual(png);
-  expect(snapshot.window).toBeUndefined();
-});
+it.skipIf(onWindowsHost)(
+  "does not attach accessibility identity if the captured window changed",
+  async () => {
+    windows = [{ ...window, title: "Different document" }];
+    const snapshot = await captureNiriWindow(socketPath);
+    expect(snapshot.png).toEqual(png);
+    expect(snapshot.window).toBeUndefined();
+  },
+);
 
-it("fails without a focused window rather than taking the screen", async () => {
-  focused = null;
-  await expect(captureNiriWindow(socketPath)).rejects.toThrow("no focused window");
-  expect(capturePath).toBeUndefined();
-});
+it.skipIf(onWindowsHost)(
+  "fails without a focused window rather than taking the screen",
+  async () => {
+    focused = null;
+    await expect(captureNiriWindow(socketPath)).rejects.toThrow("no focused window");
+    expect(capturePath).toBeUndefined();
+  },
+);
 
-it("rejects compositor errors and cleans up its temporary image", async () => {
-  const original = handler;
-  handler = async (request, socket) => {
-    if (typeof request !== "string" && request.Action.ScreenshotWindow) {
-      capturePath = request.Action.ScreenshotWindow.path;
-      send(socket, { Err: "window disappeared" });
-    } else await original(request, socket);
-  };
-  await expect(captureLinuxWindow("com.t3tools.T3Code")).rejects.toThrow("window disappeared");
-  expect(await NodeFSP.stat(NodePath.dirname(capturePath!)).catch(() => undefined)).toBeUndefined();
-});
+it.skipIf(onWindowsHost)(
+  "rejects compositor errors and cleans up its temporary image",
+  async () => {
+    const original = handler;
+    handler = async (request, socket) => {
+      if (typeof request !== "string" && request.Action.ScreenshotWindow) {
+        capturePath = request.Action.ScreenshotWindow.path;
+        send(socket, { Err: "window disappeared" });
+      } else await original(request, socket);
+    };
+    await expect(captureLinuxWindow("com.t3tools.T3Code")).rejects.toThrow("window disappeared");
+    expect(
+      await NodeFSP.stat(NodePath.dirname(capturePath!)).catch(() => undefined),
+    ).toBeUndefined();
+  },
+);
 
-it.each(["24.11", "25.05", "unknown"])("rejects unsupported Niri version %s", async (value) => {
-  version = value;
-  await expect(checkNiriCaptureSupport(socketPath)).rejects.toThrow("25.11 or newer");
-});
+it.each(onWindowsHost ? [] : ["24.11", "25.05", "unknown"])(
+  "rejects unsupported Niri version %s",
+  async (value) => {
+    version = value;
+    await expect(checkNiriCaptureSupport(socketPath)).rejects.toThrow("25.11 or newer");
+  },
+);
 
-it.each(["25.11", "26.04", "niri 26.04 (abc)"])("accepts Niri version %s", async (value) => {
-  version = value;
-  await checkNiriCaptureSupport(socketPath);
-});
+it.each(onWindowsHost ? [] : ["25.11", "26.04", "niri 26.04 (abc)"])(
+  "accepts Niri version %s",
+  async (value) => {
+    version = value;
+    await checkNiriCaptureSupport(socketPath);
+  },
+);
 
-it.each(["garbage\n", "x".repeat(4 * 1024 * 1024 + 1)])(
+it.each(onWindowsHost ? [] : ["garbage\n", "x".repeat(4 * 1024 * 1024 + 1)])(
   "bounds malformed compositor replies",
   async (reply) => {
     handler = async (_request, socket) => {
@@ -219,14 +250,14 @@ it.each(["garbage\n", "x".repeat(4 * 1024 * 1024 + 1)])(
   },
 );
 
-it("fails promptly when Niri disconnects", async () => {
+it.skipIf(onWindowsHost)("fails promptly when Niri disconnects", async () => {
   handler = async (_request, socket) => {
     socket.end();
   };
   await expect(checkNiriCaptureSupport(socketPath)).rejects.toThrow("disconnected");
 });
 
-it("does not use stale, relative, or sandboxed Niri sockets", () => {
+it.skipIf(onWindowsHost)("does not use stale, relative, or sandboxed Niri sockets", () => {
   expect(niriSocketPath()).toBe(socketPath);
   expect(niriSocketPath({ XDG_CURRENT_DESKTOP: "GNOME", NIRI_SOCKET: socketPath })).toBeUndefined();
   expect(niriSocketPath({ XDG_CURRENT_DESKTOP: "niri", NIRI_SOCKET: "relative" })).toBeUndefined();

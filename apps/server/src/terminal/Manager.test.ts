@@ -346,6 +346,12 @@ const createManager = (
 const layerWithHostPlatform = (platform: NodeJS.Platform) =>
   Layer.succeed(HostProcess.Platform, platform);
 
+/** A simulated POSIX host also resolves paths the POSIX way, whatever OS runs the test. */
+const layerWithPosixHost = (platform: NodeJS.Platform) =>
+  platform === "win32"
+    ? layerWithHostPlatform(platform)
+    : Layer.merge(layerWithHostPlatform(platform), Path.layer);
+
 function retainedHistory(text: string, maxLines: number, maxBytes = Infinity): string {
   const terminated = text.endsWith("\n");
   const lines = text.split("\n");
@@ -2354,7 +2360,7 @@ it.layer(
       const { manager, ptyAdapter } = yield* createManager(5, {
         env: { SHELL: "/shell-fixture/Jane -Doe Smith/.local/bin/fish -l" },
       }).pipe(
-        Effect.provide(layerWithHostPlatform("darwin")),
+        Effect.provide(layerWithPosixHost("darwin")),
         Effect.provideService(FileSystem.FileSystem, fixtureFs),
       );
 
@@ -2374,7 +2380,7 @@ it.layer(
       ]) {
         const { manager, ptyAdapter } = yield* createManager(5, {
           env: { SHELL: shell },
-        }).pipe(Effect.provide(layerWithHostPlatform("darwin")));
+        }).pipe(Effect.provide(layerWithPosixHost("darwin")));
 
         yield* manager.open(openInput());
 
@@ -2448,7 +2454,7 @@ it.layer(
     Effect.gen(function* () {
       const { manager, ptyAdapter } = yield* createManager(5, {
         env: { T3CODE_TERMINAL_SHELL: ` ${shell} `, SHELL: "/bin/zsh" },
-      }).pipe(Effect.provide(layerWithHostPlatform(platform)));
+      }).pipe(Effect.provide(layerWithPosixHost(platform)));
 
       yield* manager.open(openInput());
 
@@ -2760,7 +2766,7 @@ it.layer(
       runtimeEnv: { Term_Program: "", term_program_version: "custom-version" },
     },
   ] as const)(
-    "identifies as M3 Code unless the terminal env overrides it on $platform",
+    "identifies as ZZZ Code unless the terminal env overrides it on $platform",
     ({ platform, parentEnv, runtimeEnv }) =>
       Effect.gen(function* () {
         const originalEnv = { ...parentEnv };

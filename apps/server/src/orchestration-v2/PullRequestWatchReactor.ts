@@ -368,8 +368,8 @@ export const make = Effect.gen(function* () {
     return record(target, null, {
       text:
         unusable === null
-          ? `M3 Code stopped watching pull request #${target.link.number} (${target.link.url}) because it failed to read it from the host ${READ_FAILURE_LIMIT} times in a row. Check it yourself, and call watch_pull_request only if it is still open.`
-          : `M3 Code stopped watching pull request #${target.link.number} (${target.link.url}) because the M3 Code server cannot use the host: ${unusable} Fix that on the server, then call watch_pull_request only if it is still open.`,
+          ? `ZZZ Code stopped watching pull request #${target.link.number} (${target.link.url}) because it failed to read it from the host ${READ_FAILURE_LIMIT} times in a row. Check it yourself, and call watch_pull_request only if it is still open.`
+          : `ZZZ Code stopped watching pull request #${target.link.number} (${target.link.url}) because the ZZZ Code server cannot use the host: ${unusable} Fix that on the server, then call watch_pull_request only if it is still open.`,
       notification: {
         source: { kind: "monitor" },
         outcome: "failed",

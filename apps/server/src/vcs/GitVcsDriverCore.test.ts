@@ -196,9 +196,12 @@ it.effect("runs background Git in its own lane so user commands never queue behi
       concurrency: "unbounded",
     }).pipe(Effect.forkChild);
 
+    // Spawning can take real time first (Windows resolves git on disk), so wait for the six
+    // allowed starts, then check that the lanes let no more through.
+    const started = yield* Effect.forEach(Array.from({ length: 6 }), () => Queue.take(starts));
     yield* TestClock.adjust("2 seconds");
-    const started = yield* Queue.takeAll(starts);
-    assert.deepStrictEqual([...started].toSorted(), [
+    assert.equal(yield* Queue.size(starts), 0);
+    assert.deepStrictEqual(started.toSorted(), [
       "background",
       "background",
       "foreground",
@@ -331,6 +334,11 @@ const makeReviewDiffFileContentsInput = (
   newPath: "README.md",
   ...overrides,
 });
+
+// Git runs GIT_SSH_COMMAND through sh, which reads Windows backslashes as escapes.
+const sshCommandPath = (path: string) => path.replaceAll("\\", "/");
+// Git prints worktree paths with forward slashes on Windows too.
+const porcelainPath = (path: string) => path.replaceAll("\\", "/");
 
 const git = (
   cwd: string,
@@ -1589,9 +1597,10 @@ describe("pullCurrentBranch", () => {
             return span;
           },
         });
+        const blockerFibers: Array<Fiber.Fiber<unknown, unknown>> = [];
         yield* Effect.gen(function* () {
           for (const blocker of blockers) {
-            yield* driver.statusDetailsRemote(blocker).pipe(Effect.forkChild);
+            blockerFibers.push(yield* driver.statusDetailsRemote(blocker).pipe(Effect.forkChild));
           }
           yield* Deferred.await(blockersStarted);
           const status = yield* driver
@@ -1605,7 +1614,15 @@ describe("pullCurrentBranch", () => {
           assert.isTrue(waiterSucceeded);
           assert.equal(refreshed.behindCount, 0);
           assert.equal(targetFetches, 0);
-        }).pipe(Effect.ensuring(Deferred.succeed(release, undefined)));
+        }).pipe(
+          // Let the blocked fetches finish: an interrupted git can keep its clone busy on
+          // Windows, and the temp root cannot be removed until it exits.
+          Effect.ensuring(
+            Deferred.succeed(release, undefined).pipe(
+              Effect.andThen(Effect.forEach(blockerFibers, Fiber.await, { discard: true })),
+            ),
+          ),
+        );
       }),
     ).pipe(Effect.provide(layerTest)),
   );
@@ -3527,7 +3544,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
               operation: "GitVcsDriver.test.sshRefusal",
               cwd,
               args: ["fetch", "origin"],
-              env: { LC_ALL: "C", GIT_SSH_COMMAND: fakeSsh },
+              env: { LC_ALL: "C", GIT_SSH_COMMAND: sshCommandPath(fakeSsh) },
             })
             .pipe(Effect.flip);
 
@@ -3559,7 +3576,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             operation: "GitVcsDriver.test.osPermission",
             cwd,
             args: ["fetch", "origin"],
-            env: { LC_ALL: "C", GIT_SSH_COMMAND: fakeSsh },
+            env: { LC_ALL: "C", GIT_SSH_COMMAND: sshCommandPath(fakeSsh) },
           })
           .pipe(Effect.flip);
 
@@ -4195,42 +4212,45 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       }),
     );
 
-    it.effect("keeps untracked filenames with pathspec magic in the review", () =>
-      Effect.gen(function* () {
-        const cwd = yield* makeTmpDir();
-        yield* initRepoWithCommit(cwd);
-        const driver = yield* GitVcsDriver.GitVcsDriver;
-        yield* writeTextFile(cwd, ":(exclude)after.ts", "literal pathspec contents\n");
-        yield* writeTextFile(cwd, "ordinary.ts", "ordinary contents\n");
-        const indexBefore = yield* git(cwd, ["ls-files", "--stage"]);
+    // Windows file names cannot contain the ":" that pathspec magic starts with.
+    it.effect.skipIf(HostProcess.Platform.defaultValue() === "win32")(
+      "keeps untracked filenames with pathspec magic in the review",
+      () =>
+        Effect.gen(function* () {
+          const cwd = yield* makeTmpDir();
+          yield* initRepoWithCommit(cwd);
+          const driver = yield* GitVcsDriver.GitVcsDriver;
+          yield* writeTextFile(cwd, ":(exclude)after.ts", "literal pathspec contents\n");
+          yield* writeTextFile(cwd, "ordinary.ts", "ordinary contents\n");
+          const indexBefore = yield* git(cwd, ["ls-files", "--stage"]);
 
-        const preview = yield* driver.getReviewDiffPreview({ cwd, ignoreWhitespace: false });
-        const diff = preview.sources.find((source) => source.kind === "working-tree")?.diff ?? "";
+          const preview = yield* driver.getReviewDiffPreview({ cwd, ignoreWhitespace: false });
+          const diff = preview.sources.find((source) => source.kind === "working-tree")?.diff ?? "";
 
-        assert.include(diff, "+literal pathspec contents");
-        assert.include(diff, "+ordinary contents");
-        const scoped = yield* driver.getReviewDiffPreview({
-          cwd,
-          file: {
-            path: ":(exclude)after.ts",
-            previousPath: null,
-            sourceKind: "working-tree",
-          },
-        });
-        const scopedSource = scoped.sources.find((source) => source.kind === "working-tree")!;
-        assert.deepStrictEqual(scopedSource.files, [
-          {
-            path: ":(exclude)after.ts",
-            previousPath: null,
-            changeType: "new",
-            additions: 1,
-            deletions: 0,
-          },
-        ]);
-        assert.include(scopedSource.diff, "+literal pathspec contents");
-        assert.notInclude(scopedSource.diff, "ordinary.ts");
-        assert.strictEqual(yield* git(cwd, ["ls-files", "--stage"]), indexBefore);
-      }),
+          assert.include(diff, "+literal pathspec contents");
+          assert.include(diff, "+ordinary contents");
+          const scoped = yield* driver.getReviewDiffPreview({
+            cwd,
+            file: {
+              path: ":(exclude)after.ts",
+              previousPath: null,
+              sourceKind: "working-tree",
+            },
+          });
+          const scopedSource = scoped.sources.find((source) => source.kind === "working-tree")!;
+          assert.deepStrictEqual(scopedSource.files, [
+            {
+              path: ":(exclude)after.ts",
+              previousPath: null,
+              changeType: "new",
+              additions: 1,
+              deletions: 0,
+            },
+          ]);
+          assert.include(scopedSource.diff, "+literal pathspec contents");
+          assert.notInclude(scopedSource.diff, "ordinary.ts");
+          assert.strictEqual(yield* git(cwd, ["ls-files", "--stage"]), indexBefore);
+        }),
     );
 
     it.effect("reviews untracked files outside the sparse-checkout cone", () =>
@@ -5986,7 +6006,9 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       Effect.gen(function* () {
         const path = yield* Path.Path;
         // A root basename ending in whitespace catches a root lookup that trims Git's output.
-        const cwd = path.join(yield* makeTmpDir(), "repo ");
+        // Windows drops trailing spaces from file names, so it keeps a plain name.
+        const platform = yield* HostProcess.Platform;
+        const cwd = path.join(yield* makeTmpDir(), platform === "win32" ? "repo" : "repo ");
         yield* (yield* FileSystem.FileSystem).makeDirectory(cwd);
         yield* initRepoWithCommit(cwd);
         yield* writeTextFile(cwd, "nested/tracked.txt", "one\n");
@@ -7192,7 +7214,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           yield* git(cwd, ["worktree", "add", "--", path, "contested"]);
           yield* writeTextFile(path, "owned-by-B.txt", "keep this work\n");
           yield* Fiber.interrupt(creator);
-          assert.include(yield* git(cwd, ["worktree", "list", "--porcelain"]), path);
+          assert.include(yield* git(cwd, ["worktree", "list", "--porcelain"]), porcelainPath(path));
           assert.equal(yield* git(path, ["branch", "--show-current"]), "contested");
           assert.equal(
             yield* (yield* FileSystem.FileSystem).readFileString(
@@ -7236,6 +7258,8 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             Effect.sync(() =>
               NodeNet.createServer((socket) => {
                 sockets.add(socket);
+                // Windows resets the socket when the filter process is killed.
+                socket.on("error", () => {});
                 connected.resolve();
               }),
             ),
@@ -7287,11 +7311,11 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             .pipe(Effect.forkChild);
           yield* Deferred.await(hookStarted);
           yield* Effect.promise(() => connected.promise);
-          assert.include(yield* worktrees, worktreePath);
+          assert.include(yield* worktrees, porcelainPath(worktreePath));
           yield* Fiber.interrupt(cancelled);
 
           assert.equal(claims, 0);
-          assert.notInclude(yield* worktrees, worktreePath);
+          assert.notInclude(yield* worktrees, porcelainPath(worktreePath));
           assert.equal(yield* git(cwd, ["branch", "--list", "t3/cancel"]), "");
           assert.isFalse(yield* fs.exists(worktreePath));
 
@@ -7305,7 +7329,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             .pipe(Effect.forkChild);
           yield* Deferred.await(claimed);
           yield* Fiber.interrupt(retry);
-          assert.include(yield* worktrees, worktreePath);
+          assert.include(yield* worktrees, porcelainPath(worktreePath));
           assert.notInclude(yield* worktrees, "locked");
           assert.equal(yield* git(worktreePath, ["branch", "--show-current"]), "t3/cancel");
         }),
@@ -8157,7 +8181,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           assert.equal(yield* git(created.worktree.path, ["branch", "--show-current"]), branch);
           assert.include(
             yield* git(cwd, ["-c", "core.quotePath=false", "worktree", "list", "--porcelain"]),
-            `worktree ${created.worktree.path}`,
+            `worktree ${porcelainPath(created.worktree.path)}`,
           );
           folders.add(folder);
         }

@@ -206,9 +206,12 @@ export const make = Effect.gen(function* () {
       if (fallback !== null) {
         selection = fallback;
         substituted = true;
-      } else if (localPolicy || operation !== "generateReviewGuide") return yield* noLocalModel;
+      } else if (localPolicy || (operation === "generateReviewGuide" && !textGeneratorCannotRun)) {
+        // A text generator picked for a review guide gets the more specific error below.
+        return yield* noLocalModel;
+      }
     }
-    // Only a selection M3 chose; one the user picked keeps the options they gave it.
+    // Only a selection ZZZ chose; one the user picked keeps the options they gave it.
     if (substituted) {
       const provider = snapshots.find((candidate) => candidate.instanceId === selection.instanceId);
       if (provider?.inference === "local") selection = withLowReasoningOption(selection, provider);

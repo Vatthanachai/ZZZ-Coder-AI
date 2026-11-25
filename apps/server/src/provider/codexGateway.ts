@@ -120,7 +120,7 @@ export function codexWithoutGatewayRefusal(
 ): string | undefined {
   if (resolution === undefined) return undefined;
   if (resolution.managed) {
-    return "M3 Code could not route this request through its gateway, and this Codex instance runs local models, so it does not use the cloud instead.";
+    return "ZZZ Code could not route this request through its gateway, and this Codex instance runs local models, so it does not use the cloud instead.";
   }
   return resolution.local
     ? `${resolution.reason} This Codex instance runs local models, so it waits instead of using the cloud.`
@@ -247,7 +247,7 @@ export function withCodexGatewayStatus<
   const { serverId, displayName, models } = resolution.server;
   return {
     ...draft,
-    message: `Experimental: M3 Code runs Codex on ${displayName} as t3-${serverId}.`,
+    message: `Experimental: ZZZ Code runs Codex on ${displayName} as t3-${serverId}.`,
     models: models.map((model, index) => ({
       slug: model.id,
       name: model.id,

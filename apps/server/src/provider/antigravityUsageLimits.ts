@@ -20,7 +20,7 @@ export const makeAntigravityUsageProbe = Effect.fn("makeAntigravityUsageProbe")(
       checkedAt,
       reason: "unsupported",
       message:
-        "Antigravity usage-limit probing is disabled in M3 Code to avoid calling undocumented internal Google APIs.",
+        "Antigravity usage-limit probing is disabled in ZZZ Code to avoid calling undocumented internal Google APIs.",
     });
   });
 

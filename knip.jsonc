@@ -18,8 +18,12 @@
       "vitest": { "entry": [".github/**/*.test.cjs"] },
     },
     "evals": {
-      // The grader loads these answers by path, as the server loads a definitions file.
-      "entry": ["workflow-authoring/fixtures/*.ts"],
+      "entry": [
+        // The grader loads these answers by path, as the server loads a definitions file.
+        "workflow-authoring/fixtures/*.ts",
+        // capture-local.ts runs this MCP stub by path, as the harness under capture spawns it.
+        "mcp-tool-use/mcp-stub.ts",
+      ],
     },
     "scripts": {
       // Knip loads its preprocessor through a CLI option; native verification and
@@ -158,10 +162,6 @@
     "infra/relay": {
       // Alchemy loads src/worker.ts as the Worker entry and reads its default export.
       "entry": ["alchemy.run.ts!", "src/persistence/schema.ts!", "src/worker.ts!"],
-    },
-    "evals": {
-      // capture-local.ts runs this MCP stub by path, as the harness under capture spawns it.
-      "entry": ["mcp-tool-use/mcp-stub.ts"],
     },
     "packages/*": {
       // These workspace packages are private to this monorepo.

@@ -357,12 +357,12 @@ function signX509Certificate(input: {
     derIntegerBytes(serial.bytes),
     sigAlg,
     derName([
-      [OID_ORGANIZATION, "M3 Code Local"],
+      [OID_ORGANIZATION, "ZZZ Code Local"],
       [OID_COMMON_NAME, input.issuerCommonName],
     ]),
     derSequence([derTime(input.notBefore), derTime(input.notAfter)]),
     derName([
-      [OID_ORGANIZATION, "M3 Code Local"],
+      [OID_ORGANIZATION, "ZZZ Code Local"],
       [OID_COMMON_NAME, input.subjectCommonName],
     ]),
     spkiDer,
@@ -558,7 +558,7 @@ export const ensureLocalMtlsPki = Effect.fn("MtlsPki.ensureLocalMtlsPki")(functi
   // Backdate notBefore by 5 minutes to tolerate minor LAN clock skew.
   const notBefore = DateTime.toDateUtc(DateTime.makeUnsafe(nowMs - 5 * 60 * 1000));
   const envTag = input.environmentId ? input.environmentId.slice(0, 8) : "local";
-  const caCommonName = `M3 Code Local CA (${envTag})`;
+  const caCommonName = `ZZZ Code Local CA (${envTag})`;
 
   let caCertPem: string;
   let caKeyPem: string;
@@ -639,7 +639,7 @@ export const ensureLocalMtlsPki = Effect.fn("MtlsPki.ensureLocalMtlsPki")(functi
     const issuerCnMatch = /CN=([^\n]+)/.exec(caX509.subject);
     const issuerCn = issuerCnMatch?.[1]?.trim() || caCommonName;
     const signedServer = signX509Certificate({
-      subjectCommonName: "M3 Code Local Server",
+      subjectCommonName: "ZZZ Code Local Server",
       issuerCommonName: issuerCn,
       subjectPublicKey: serverKeys.publicKey,
       issuerPrivateKey: caPrivateKey,
@@ -718,7 +718,7 @@ export const issueMtlsClientCertificate = Effect.fn("MtlsPki.issueMtlsClientCert
     const label = input.label.trim() || clientId;
     const clientKeys = generateEcKeyPair();
     const issuerCnMatch = /CN=([^\n]+)/.exec(caX509.subject);
-    const issuerCn = issuerCnMatch?.[1]?.trim() || "M3 Code Local CA";
+    const issuerCn = issuerCnMatch?.[1]?.trim() || "ZZZ Code Local CA";
 
     const signedClient = signX509Certificate({
       subjectCommonName: label,
@@ -930,9 +930,9 @@ export function issueEphemeralLocalCliClientCert(mtlsDir: string): {
   const clientKeys = generateEcKeyPair();
   const nowMs = DateTime.toEpochMillis(DateTime.nowUnsafe());
   const issuerCnMatch = /CN=([^\n]+)/.exec(caX509.subject);
-  const issuerCn = issuerCnMatch?.[1]?.trim() || "M3 Code Local CA";
+  const issuerCn = issuerCnMatch?.[1]?.trim() || "ZZZ Code Local CA";
   const signed = signX509Certificate({
-    subjectCommonName: "M3 Code Local CLI",
+    subjectCommonName: "ZZZ Code Local CLI",
     issuerCommonName: issuerCn,
     subjectPublicKey: clientKeys.publicKey,
     issuerPrivateKey: caPrivateKey,

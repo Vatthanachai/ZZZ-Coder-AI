@@ -20,6 +20,8 @@ export const makeProcessProbe = Effect.gen(function* () {
         }
       }
     });
+    // Windows resets the socket when the probed process is killed; "close" still follows.
+    socket.on("error", () => {});
     socket.on("close", () => {
       sockets.delete(socket);
       Deferred.doneUnsafe(exited, Effect.void);

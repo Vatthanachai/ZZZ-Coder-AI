@@ -4,6 +4,7 @@ import {
 } from "@t3tools/shared/assistantCitations";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as NodePathLayer from "@effect/platform-node/NodePath";
 import { expect, it, vi } from "vite-plus/test";
 import { it as effectIt } from "@effect/vitest";
 import {
@@ -100,10 +101,13 @@ const normalize = (target: string) => {
   }
   return `/${parts.join("/")}`;
 };
-const layerWorktreeLocation = (worktreesDir = managedWorktreesDir) =>
+const layerWorktreeLocation = (worktreesDir?: string) =>
   Layer.mergeAll(
-    Path.layer,
-    Layer.mock(ServerConfig.ServerConfig)({ worktreesDir } as ServerConfig.ServerConfig["Service"]),
+    // The fixture root is a POSIX path; a real temp directory keeps the host's paths.
+    worktreesDir === undefined ? Path.layer : NodePathLayer.layer,
+    Layer.mock(ServerConfig.ServerConfig)({
+      worktreesDir: worktreesDir ?? managedWorktreesDir,
+    } as ServerConfig.ServerConfig["Service"]),
     ServerSettings.layerTest(),
   );
 
@@ -1580,7 +1584,7 @@ effectIt.effect(
           failure: {
             class: "unknown",
             message:
-              "M3 Code could not start this turn. Send the message again; if it keeps failing, check the server logs.",
+              "ZZZ Code could not start this turn. Send the message again; if it keeps failing, check the server logs.",
           },
         },
       ]);

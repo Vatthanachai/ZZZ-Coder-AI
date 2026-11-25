@@ -41,7 +41,7 @@ describe("T3 device instructions", () => {
 
   it("reach OpenCode and Cursor only when the session holds device access", () => {
     assert.include(t3OrchestrationSystemPrompt(true, true), T3_CODE_DEVICE_TOOL_INSTRUCTIONS);
-    assert.notInclude(t3OrchestrationSystemPrompt(true, false), "## M3 Code devices");
+    assert.notInclude(t3OrchestrationSystemPrompt(true, false), "## ZZZ Code devices");
     assert.isUndefined(t3OrchestrationSystemPrompt(false, true));
 
     const firstRun = (hasDeviceTools: boolean) =>
@@ -53,7 +53,7 @@ describe("T3 device instructions", () => {
         deviceInstructionsDelivered: false,
       });
     assert.include(firstRun(true), T3_CODE_DEVICE_TOOL_INSTRUCTIONS);
-    assert.notInclude(firstRun(false), "## M3 Code devices");
+    assert.notInclude(firstRun(false), "## ZZZ Code devices");
 
     const laterRun = (deviceInstructionsDelivered: boolean) =>
       t3OrchestrationPrompt({
@@ -93,8 +93,8 @@ describe("T3 device instructions", () => {
       deviceInstructionsDelivered: false,
     });
     assert.notInclude(prompt, "### Visuals and preview");
-    assert.notInclude(prompt, "## M3 Code browser");
-    assert.notInclude(prompt, "## M3 Code devices");
+    assert.notInclude(prompt, "## ZZZ Code browser");
+    assert.notInclude(prompt, "## ZZZ Code devices");
     assert.include(prompt, "`t3_thread_launch`");
     assert.include(prompt, "Build the page.");
   });
@@ -111,6 +111,6 @@ describe("T3 device instructions", () => {
       t3AcpPromptWithInstructions({ prompt: "Again.", state, previousState: state }),
       "Again.",
     );
-    assert.notInclude(t3AcpPromptWithInstructions({ prompt: "Hi.", state }), "## M3 Code devices");
+    assert.notInclude(t3AcpPromptWithInstructions({ prompt: "Hi.", state }), "## ZZZ Code devices");
   });
 });

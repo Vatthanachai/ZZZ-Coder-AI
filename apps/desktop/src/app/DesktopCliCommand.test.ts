@@ -13,6 +13,9 @@ import * as DesktopCliCommand from "./DesktopCliCommand.ts";
 import * as DesktopCliShim from "./DesktopCliShim.ts";
 import * as DesktopEnvironment from "./DesktopEnvironment.ts";
 
+// These cases install real symlinks and resolve PATH the POSIX way on the host filesystem.
+const onWindowsHost = HostProcess.Platform.defaultValue() === "win32";
+
 const environmentFor = (
   path: Path.Path,
   input: { home: string; baseDir: string; platform?: NodeJS.Platform; isPackaged?: boolean },
@@ -25,7 +28,7 @@ const environmentFor = (
     baseDir: input.baseDir,
     stateDir: path.join(input.baseDir, "userdata"),
     desktopSettingsPath: path.join(input.baseDir, "userdata", "desktop-settings.json"),
-    serverRoot: "/opt/M3 Code/resources/app.asar",
+    serverRoot: "/opt/ZZZ Code/resources/app.asar",
     appImagePath: Option.none(),
   } as unknown as DesktopEnvironment.DesktopEnvironment["Service"]);
 
@@ -94,7 +97,7 @@ const fakePowerShell = (initial: string, inherited: Record<string, string> = {})
 };
 
 it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
-  it.effect("links the launcher onto PATH and removes only that link", () =>
+  it.effect.skipIf(onWindowsHost)("links the launcher onto PATH and removes only that link", () =>
     Effect.gen(function* () {
       const env: NodeJS.ProcessEnv = { PATH: "", SHELL: "/bin/zsh" };
       const fs = yield* FileSystem.FileSystem;
@@ -129,7 +132,7 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       yield* Effect.all([command.addToPath, command.addToPath], { concurrency: "unbounded" });
       expect((yield* command.addToPath).pathSetup).toEqual({ file: "~/.zshrc", added: true });
       expect(yield* fs.readFileString(zshrc)).toBe(
-        '# mine\n# Added by M3 Code\nexport PATH="$PATH:$HOME/.local/bin"\n',
+        '# mine\n# Added by ZZZ Code\nexport PATH="$PATH:$HOME/.local/bin"\n',
       );
 
       expect((yield* command.uninstall).installedPath).toBeNull();
@@ -163,7 +166,7 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
     }),
   );
 
-  it.effect("never replaces or removes a t3 it did not create", () =>
+  it.effect.skipIf(onWindowsHost)("never replaces or removes a t3 it did not create", () =>
     Effect.gen(function* () {
       const env: NodeJS.ProcessEnv = { PATH: "", SHELL: "/bin/zsh" };
       const fs = yield* FileSystem.FileSystem;
@@ -205,7 +208,7 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
     }),
   );
 
-  it.effect("finds and removes a link left by a previous T3 home", () =>
+  it.effect.skipIf(onWindowsHost)("finds and removes a link left by a previous T3 home", () =>
     Effect.gen(function* () {
       const env: NodeJS.ProcessEnv = { PATH: "", SHELL: "/bin/zsh" };
       const fs = yield* FileSystem.FileSystem;
@@ -262,7 +265,7 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
     }),
   );
 
-  it.effect("refuses to install behind another t3 that runs first", () =>
+  it.effect.skipIf(onWindowsHost)("refuses to install behind another t3 that runs first", () =>
     Effect.gen(function* () {
       const env: NodeJS.ProcessEnv = { PATH: "", SHELL: "/bin/zsh" };
       const fs = yield* FileSystem.FileSystem;
@@ -346,33 +349,35 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       }),
   );
 
-  it.effect("does not treat its own launcher as another t3 when its folder is first on PATH", () =>
-    Effect.gen(function* () {
-      const env: NodeJS.ProcessEnv = { PATH: "", SHELL: "/bin/zsh" };
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const home = yield* fs.makeTempDirectoryScoped();
-      const launcher = path.join(home, ".t3", "bin", "t3");
-      env.PATH = [path.dirname(launcher), path.join(home, ".local", "bin")].join(":");
+  it.effect.skipIf(onWindowsHost)(
+    "does not treat its own launcher as another t3 when its folder is first on PATH",
+    () =>
+      Effect.gen(function* () {
+        const env: NodeJS.ProcessEnv = { PATH: "", SHELL: "/bin/zsh" };
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const home = yield* fs.makeTempDirectoryScoped();
+        const launcher = path.join(home, ".t3", "bin", "t3");
+        env.PATH = [path.dirname(launcher), path.join(home, ".local", "bin")].join(":");
 
-      const command = yield* commandIn({ home, env });
-      const installed = yield* command.install;
+        const command = yield* commandIn({ home, env });
+        const installed = yield* command.install;
 
-      expect(yield* fs.exists(launcher)).toBe(true);
-      expect(installed).toMatchObject({
-        onPath: true,
-        installedPath: path.join(home, ".local", "bin", "t3"),
-      });
-      expect(installed.shadowedBy).toBeUndefined();
-      expect(yield* command.state).toEqual(installed);
+        expect(yield* fs.exists(launcher)).toBe(true);
+        expect(installed).toMatchObject({
+          onPath: true,
+          installedPath: path.join(home, ".local", "bin", "t3"),
+        });
+        expect(installed.shadowedBy).toBeUndefined();
+        expect(yield* command.state).toEqual(installed);
 
-      const removed = yield* command.uninstall;
-      expect(removed.installedPath).toBeNull();
-      expect(removed.onPath).toBe(true);
-      expect(yield* command.state).toEqual(removed);
-      expect(yield* fs.exists(installed.installedPath!)).toBe(false);
-      expect(yield* fs.exists(launcher)).toBe(true);
-    }),
+        const removed = yield* command.uninstall;
+        expect(removed.installedPath).toBeNull();
+        expect(removed.onPath).toBe(true);
+        expect(yield* command.state).toEqual(removed);
+        expect(yield* fs.exists(installed.installedPath!)).toBe(false);
+        expect(yield* fs.exists(launcher)).toBe(true);
+      }),
   );
 
   it.effect("leaves the Windows PATH alone when it cannot be read", () =>

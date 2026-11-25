@@ -124,6 +124,13 @@ const makeServerConfig = (
     issues: [],
     providers,
     availableEditors: [],
+    observability: {
+      logsDirectoryPath: "/workspace/.t3/logs",
+      localTracingEnabled: false,
+      otlpTracesEnabled: false,
+      otlpMetricsEnabled: false,
+      otlpLogsEnabled: false,
+    },
     settings: {},
     threadSnapshotPagination: true,
     threadResumeCompletionMarker: true,

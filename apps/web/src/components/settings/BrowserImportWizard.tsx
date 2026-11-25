@@ -282,14 +282,14 @@ function FullDiskAccessStep({
       <DialogHeader>
         <DialogTitle>
           <T>
-            Let M3 Code read <Var>{source.name}</Var>&rsquo;s cookies
+            Let ZZZ Code read <Var>{source.name}</Var>&rsquo;s cookies
           </T>
         </DialogTitle>
         <DialogDescription>
           <T>
-            To import cookies from <Var>{source.name}</Var>, M3 Code needs Full Disk Access. Turn it
-            on in System Settings, then come back to finish the import. You can revoke it again once
-            the import is done.
+            To import cookies from <Var>{source.name}</Var>, ZZZ Code needs Full Disk Access. Turn
+            it on in System Settings, then come back to finish the import. You can revoke it again
+            once the import is done.
           </T>
         </DialogDescription>
       </DialogHeader>
@@ -323,10 +323,10 @@ function FullDiskAccessStep({
           <p className="mt-3 text-xs text-muted-foreground">
             {stillRequired
               ? gt(
-                  "Access is still required. Quit and reopen M3 Code if you just allowed it, then retry the import.",
+                  "Access is still required. Quit and reopen ZZZ Code if you just allowed it, then retry the import.",
                 )
               : gt(
-                  "If access doesn't update after you allow it, quit and reopen M3 Code, then retry the import.",
+                  "If access doesn't update after you allow it, quit and reopen ZZZ Code, then retry the import.",
                 )}
           </p>
         ) : null}

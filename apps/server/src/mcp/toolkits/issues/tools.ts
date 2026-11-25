@@ -340,7 +340,7 @@ const SetIssueStateTool = Tool.make("set_issue_state", {
 
 const LinkIssueTool = Tool.make("link_issue", {
   description:
-    "Link an issue to a thread so M3 Code shows it beside the thread. Link every issue you work on or file.",
+    "Link an issue to a thread so ZZZ Code shows it beside the thread. Link every issue you work on or file.",
   parameters: Schema.Struct({ ...IssueTargetInput.fields, ...ThreadTargetInput.fields }),
   success: LinkIssueResult,
   failure: IssueToolError,

@@ -13,7 +13,7 @@ export function warnAboutHiddenCharacters(prompt: LinkedPrompt): void {
     title: m(msg("This prompt had hidden characters, it may be malicious")),
     description: m(
       msg(
-        "{count, plural, one {M3 Code removed {count} hidden character. Read the prompt before you send it.} other {M3 Code removed {count} hidden characters. Read the prompt before you send it.}}",
+        "{count, plural, one {ZZZ Code removed {count} hidden character. Read the prompt before you send it.} other {ZZZ Code removed {count} hidden characters. Read the prompt before you send it.}}",
         { count: prompt.hiddenCharacters },
       ),
     ),

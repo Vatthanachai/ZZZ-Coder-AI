@@ -265,7 +265,7 @@ export const formatHeadlessServeOutput = (accessInfo: HeadlessServeAccessInfo): 
   const parsedUrl = new URL(accessInfo.connectionString);
   const usesHttps = parsedUrl.protocol === "https:";
   return [
-    "M3 Code server is ready.",
+    "ZZZ Code server is ready.",
     `Connection string: ${accessInfo.connectionString}`,
     `Token: ${accessInfo.token}`,
     `Pairing URL: ${accessInfo.pairingUrl}`,

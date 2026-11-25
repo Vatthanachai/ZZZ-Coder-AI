@@ -655,13 +655,13 @@ export function withMessageSenderNote(
   const agent = message.createdBy === "agent";
   const note =
     agent && message.linkedSender !== undefined
-      ? `[M3 Code: the agent in T3 thread ${JSON.stringify(message.linkedSender.threadId)} on linked environment ${JSON.stringify(message.linkedSender.environmentId)} sent this message, not the user.]`
+      ? `[ZZZ Code: the agent in T3 thread ${JSON.stringify(message.linkedSender.threadId)} on linked environment ${JSON.stringify(message.linkedSender.environmentId)} sent this message, not the user.]`
       : agent && message.senderThreadId !== undefined
-        ? `[M3 Code: the agent in T3 thread ${JSON.stringify(message.senderThreadId)} sent this message, not the user.]`
+        ? `[ZZZ Code: the agent in T3 thread ${JSON.stringify(message.senderThreadId)} sent this message, not the user.]`
         : message.scheduledTaskId !== undefined
-          ? `[M3 Code: scheduled task ${JSON.stringify(message.scheduledTaskId)} sent this prompt, not the user typing in this chat.]`
+          ? `[ZZZ Code: scheduled task ${JSON.stringify(message.scheduledTaskId)} sent this prompt, not the user typing in this chat.]`
           : agent && message.creationSource === "mcp"
-            ? "[M3 Code: this message came through M3 Code's tools, not from the user typing in this chat.]"
+            ? "[ZZZ Code: this message came through ZZZ Code's tools, not from the user typing in this chat.]"
             : undefined;
   if (note === undefined || LEADING_COMMAND.test(text)) return text;
   return text === "" ? note : `${note}\n\n${text}`;
@@ -698,7 +698,7 @@ export function parseGoalCommand(message: {
   }
 }
 
-/** Why M3 Code sent this `/compact` on its own, or undefined for one someone asked for. */
+/** Why ZZZ Code sent this `/compact` on its own, or undefined for one someone asked for. */
 export function idleCompactionOf(
   message: CompactionMessageFields,
 ): OrchestrationV2IdleCompaction | undefined {
@@ -1513,7 +1513,7 @@ export const OrchestrationV2Notification = Schema.Struct({
 });
 export type OrchestrationV2Notification = typeof OrchestrationV2Notification.Type;
 
-/** Why M3 Code compacted a thread on its own, on the `/compact` it sent. */
+/** Why ZZZ Code compacted a thread on its own, on the `/compact` it sent. */
 export const OrchestrationV2IdleCompaction = Schema.Literals(["beforeCacheExpires", "onReturn"]);
 export type OrchestrationV2IdleCompaction = typeof OrchestrationV2IdleCompaction.Type;
 

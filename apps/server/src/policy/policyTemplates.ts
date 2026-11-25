@@ -53,7 +53,7 @@ const policies = (): ReadonlyArray<Policy> => [
   {
     id: "Organization",
     title: "Organization",
-    help: 'Required whenever any other M3 Code policy is set: M3 Code will not start with policies that do not name an organization.\n\nUsers see the name as "Managed by <organization>" beside every control the policy locks. The support URL is optional.',
+    help: 'Required whenever any other ZZZ Code policy is set: ZZZ Code will not start with policies that do not name an organization.\n\nUsers see the name as "Managed by <organization>" beside every control the policy locks. The support URL is optional.',
     elements: [
       { kind: "text", name: "Organization", label: "Organization name" },
       { kind: "text", name: "SupportUrl", label: "Support URL (optional)" },
@@ -76,7 +76,7 @@ const policies = (): ReadonlyArray<Policy> => [
   {
     id: "Clients",
     title: "Allowed clients",
-    help: "What may connect to M3 Code on this machine.\n\nWithout Remote, M3 Code only listens on this machine, does not create pairing links, signs out devices that paired earlier, and turns T3 Connect off. Check at least one client.\n\nDisabled or Not Configured: no restriction.",
+    help: "What may connect to ZZZ Code on this machine.\n\nWithout Remote, ZZZ Code only listens on this machine, does not create pairing links, signs out devices that paired earlier, and turns T3 Connect off. Check at least one client.\n\nDisabled or Not Configured: no restriction.",
     elements: [
       {
         kind: "checkbox",
@@ -116,19 +116,19 @@ const policies = (): ReadonlyArray<Policy> => [
   {
     id: "BrowserCookieImport",
     title: "Allow importing browser cookies",
-    help: "Disabled stops users from importing cookies from another browser into M3 Code's browser.",
+    help: "Disabled stops users from importing cookies from another browser into ZZZ Code's browser.",
     toggle: "BrowserCookieImport",
   },
   {
     id: "PreviewTunnel",
     title: "Allow the preview tunnel",
-    help: "Disabled stops other devices from opening this machine's local servers through M3 Code: no in-app browser tabs loaded on the device, no Open on this device, no port forwarding. Browser tabs still stream from this machine.",
+    help: "Disabled stops other devices from opening this machine's local servers through ZZZ Code: no in-app browser tabs loaded on the device, no Open on this device, no port forwarding. Browser tabs still stream from this machine.",
     toggle: "PreviewTunnel",
   },
   {
     id: "WorktreeLayoutCommands",
     title: "Allow project worktree layout commands",
-    help: "Disabled stops M3 Code from running the worktreeLayout commands a project's t3.json declares, whether or not a user approved them. Such a project gets no new worktree threads; existing thread folders are restored and removed without the project's commands.",
+    help: "Disabled stops ZZZ Code from running the worktreeLayout commands a project's t3.json declares, whether or not a user approved them. Such a project gets no new worktree threads; existing thread folders are restored and removed without the project's commands.",
     toggle: "WorktreeLayoutCommands",
   },
   {
@@ -146,7 +146,7 @@ const policies = (): ReadonlyArray<Policy> => [
   {
     id: "Updates",
     title: "Updates",
-    help: "Off stops M3 Code from checking for updates, for machines that receive M3 Code through device management.\n\nA feed URL makes the desktop app update from your own mirror of the release feed instead of GitHub; it must be https. Unchecking nightly makes the nightly channel unavailable.\n\nDisabled or Not Configured: no restriction.",
+    help: "Off stops ZZZ Code from checking for updates, for machines that receive ZZZ Code through device management.\n\nA feed URL makes the desktop app update from your own mirror of the release feed instead of GitHub; it must be https. Unchecking nightly makes the nightly channel unavailable.\n\nDisabled or Not Configured: no restriction.",
     elements: [
       {
         kind: "enum",
@@ -170,13 +170,13 @@ const policies = (): ReadonlyArray<Policy> => [
   {
     id: "Settings",
     title: "Managed settings (JSON)",
-    help: 'Defaults and locks for server settings, as the "settings" object of a M3 Code policy. Each key is a setting path; each value is {"value": ..., "locked": true|false}.\n\nExample: {"enableAgentBrowserAccess": {"value": false, "locked": true}}\n\nRun "t3 policy check" on a policy file with the same object to validate it first.',
+    help: 'Defaults and locks for server settings, as the "settings" object of a ZZZ Code policy. Each key is a setting path; each value is {"value": ..., "locked": true|false}.\n\nExample: {"enableAgentBrowserAccess": {"value": false, "locked": true}}\n\nRun "t3 policy check" on a policy file with the same object to validate it first.',
     elements: [{ kind: "text", name: "Settings", label: "Settings JSON", json: true }],
   },
   {
     id: "ProviderInstances",
     title: "Provider settings (JSON)",
-    help: 'Fields set on every instance of a provider, as the "limits.providers.instances" object of a M3 Code policy: environment variables, binaryPath, launchArgs.\n\nExample: {"claudeAgent": {"locked": true, "environment": [{"name": "CLAUDE_CODE_USE_BEDROCK", "value": "1"}]}}\n\nEvery user on the machine can read this value, so do not put credentials in it.',
+    help: 'Fields set on every instance of a provider, as the "limits.providers.instances" object of a ZZZ Code policy: environment variables, binaryPath, launchArgs.\n\nExample: {"claudeAgent": {"locked": true, "environment": [{"name": "CLAUDE_CODE_USE_BEDROCK", "value": "1"}]}}\n\nEvery user on the machine can read this value, so do not put credentials in it.',
     elements: [
       { kind: "text", name: "ProviderInstances", label: "Provider settings JSON", json: true },
     ],
@@ -276,8 +276,8 @@ const presentationElement = (element: Element) => {
 /** The en-US strings and dialog layouts for `windowsAdmx`. */
 export function windowsAdml(): string {
   const strings: Array<readonly [string, string]> = [
-    ["T3Code", "M3 Code"],
-    ["SUPPORTED_T3Code", "M3 Code with managed policy support"],
+    ["T3Code", "ZZZ Code"],
+    ["SUPPORTED_T3Code", "ZZZ Code with managed policy support"],
   ];
   const presentations: Array<string> = [];
   for (const policy of policies()) {
@@ -297,8 +297,8 @@ export function windowsAdml(): string {
   }
   return `<?xml version="1.0" encoding="utf-8"?>
 <policyDefinitionResources xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" revision="1.0" schemaVersion="1.0" xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
-  <displayName>M3 Code</displayName>
-  <description>Policies for M3 Code</description>
+  <displayName>ZZZ Code</displayName>
+  <description>Policies for ZZZ Code</description>
   <resources>
     <stringTable>
 ${strings.map(([id, text]) => `      <string id="${id}">${escapeXml(text)}</string>`).join("\n")}
@@ -363,7 +363,7 @@ export function macosProfile(
   const profile = {
     PayloadContent: [
       {
-        PayloadDisplayName: "M3 Code policy",
+        PayloadDisplayName: "ZZZ Code policy",
         PayloadIdentifier: `com.t3tools.t3code.policy.${uuids.payload}`,
         PayloadType: "com.t3tools.t3code",
         PayloadUUID: uuids.payload,
@@ -371,8 +371,8 @@ export function macosProfile(
         ...document,
       },
     ],
-    PayloadDescription: "Configures M3 Code for every user on this Mac.",
-    PayloadDisplayName: `M3 Code policy for ${document.organization}`,
+    PayloadDescription: "Configures ZZZ Code for every user on this Mac.",
+    PayloadDisplayName: `ZZZ Code policy for ${document.organization}`,
     PayloadIdentifier: `com.t3tools.t3code.policy`,
     PayloadOrganization: document.organization,
     PayloadScope: "System",

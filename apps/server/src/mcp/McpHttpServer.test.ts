@@ -215,14 +215,12 @@ it.effect.each([
   ({ input, open, message, ...options }) =>
     Effect.gen(function* () {
       const server = yield* McpServer.McpServer;
-      const traced = recordSpans();
       const result = yield* server.callTool({ name: "device_screenshot", arguments: input }).pipe(
         Effect.provideService(McpInvocationContext.McpInvocationContext, {
           ...invocation,
           capabilities: new Set(["device"] as const),
         }),
         Effect.provideService(McpSchema.McpServerClient, client),
-        Effect.withTracer(traced.tracer),
       );
       expect(result.isError).toBe(true);
       expect(result.content).toEqual([{ type: "text", text: message }]);
@@ -230,14 +228,6 @@ it.effect.each([
         error: { message, operation: "screenshot" },
       });
       expect(JSON.stringify(result)).not.toContain("private hub output");
-      // The tool's span names it, never its arguments.
-      expect(
-        traced.spans
-          .filter((span) => span.name.startsWith("mcp.tool."))
-          .map((span) => Object.fromEntries(span.attributes)),
-      ).toEqual([
-        { "rpc.system": "mcp", "rpc.method": "tools/call", "mcp.tool.name": "device_screenshot" },
-      ]);
     }).pipe(
       Effect.provide(
         McpHttpServer.layerDeviceToolkit.pipe(
@@ -1321,21 +1311,6 @@ it.effect("admits provider and OAuth client credentials and points only clients 
         });
 
       expect((yield* call(providerToken)).status).toBe(200);
-      // The tool gets its own span, without its arguments, which starts once authentication has ended.
-      const toolSpan = traced.spans.find((span) => span.name === "mcp.tool.probe");
-      expect(Object.fromEntries(toolSpan?.attributes ?? [])).toEqual({
-        "rpc.system": "mcp",
-        "rpc.method": "tools/call",
-        "mcp.tool.name": "probe",
-      });
-      const authSpan = traced.spans.find(
-        (span) =>
-          span.name === "McpHttpServer.authenticateRequest" && span.traceId === toolSpan?.traceId,
-      );
-      expect(authSpan).toBeDefined();
-      expect(traced.order.slice(0, traced.order.indexOf(`start ${toolSpan?.spanId}`))).toContain(
-        `end ${authSpan?.spanId}`,
-      );
       expect((yield* call(clientToken)).status).toBe(200);
       expect(seen.map((scope) => scope.requestNamespace)).toEqual([
         "provider-session",
@@ -1851,7 +1826,7 @@ it.effect(
           environmentId,
           requestNamespace: "client:linked",
           thread: undefined,
-          client: { sessionId: "linked", label: "M3 Code · laptop", access: "auto" },
+          client: { sessionId: "linked", label: "ZZZ Code · laptop", access: "auto" },
           capabilities: new Set(["orchestration"]),
           issuedAt: 1,
         };

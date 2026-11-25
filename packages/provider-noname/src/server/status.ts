@@ -65,7 +65,7 @@ export const buildInitialNoNameProviderSnapshot = Effect.fn("NoNameProvider.buil
       auth: { status: "unknown" },
       message: settings.enabled
         ? "Looking for NoName..."
-        : "NoName is disabled in M3 Code settings.",
+        : "NoName is disabled in ZZZ Code settings.",
     });
   },
 );
@@ -80,7 +80,7 @@ export const checkNoNameProviderStatus = Effect.fn("NoNameProvider.checkStatus")
       version: null,
       status: "warning",
       auth: { status: "unknown" },
-      message: "NoName is disabled in M3 Code settings.",
+      message: "NoName is disabled in ZZZ Code settings.",
     });
   }
   const url = noNameServerUrl(settings);

@@ -1094,7 +1094,7 @@ const installIntoSession = Effect.fn("nativeClient.installIntoSession")(function
   // A session behind a gateway (a device pool) is reachable only with the config that opened it.
   const target = ["--session", session, ...(config ? ["--config", config] : [])];
   // Daemon variables in the shell (a device-pool login) override the config and authenticate
-  // as someone who does not hold this lease; M3 Code's own launcher drops them the same way.
+  // as someone who does not hold this lease; ZZZ Code's own launcher drops them the same way.
   const agentDeviceEnvironment = config
     ? ["AGENT_DEVICE_DAEMON_BASE_URL", "AGENT_DEVICE_DAEMON_AUTH_TOKEN", "AGENT_DEVICE_CONFIG"]
     : [];
@@ -1190,7 +1190,7 @@ const main = Command.make(
     ),
     config: Flag.String("config").pipe(
       Flag.withDescription(
-        "With --session, the agent-device config the session was opened with (M3 Code's device_open returns it in targetArgs). Needed for a device pool behind a gateway.",
+        "With --session, the agent-device config the session was opened with (ZZZ Code's device_open returns it in targetArgs). Needed for a device pool behind a gateway.",
       ),
       Flag.optional,
     ),
@@ -1286,7 +1286,6 @@ const main = Command.make(
         return yield* new NativeClientError({ message: `Unsupported Android ABI ${value}.` });
       return value;
     });
-    const task = `native-client:${platform}`;
     const operations = {
       fingerprint: fingerprint(platform),
       installedBinary: installedBinary(platform, device),

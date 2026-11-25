@@ -17,6 +17,7 @@ import {
   resolveEnvironmentMachineKind,
 } from "@t3tools/contracts";
 import { resolvePastedPath } from "@t3tools/shared/path";
+import { T, useGT, Var } from "gt-react";
 import { ChevronRightIcon, CornerLeftUpIcon, FolderIcon, TerminalIcon } from "lucide-react";
 import { type KeyboardEvent, useDeferredValue, useEffect, useId, useRef, useState } from "react";
 import { create } from "zustand";
@@ -182,6 +183,7 @@ function MachineStep({
   onPickSshHost: (host: DesktopDiscoveredSshHost) => void;
   onCancelConnect: () => void;
 }) {
+  const gt = useGT();
   const sshHosts = useEnvironmentQuery(hasDesktopBridge ? desktopSshHostsStateAtom : null);
   const refreshSshHosts = sshHosts.refresh;
   // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- rereads ~/.ssh/config through the desktop bridge each time the machine list is shown
@@ -204,9 +206,16 @@ function MachineStep({
     return (
       <>
         <DialogHeader>
-          <DialogTitle>Connecting to {connectingHost.alias}…</DialogTitle>
+          <DialogTitle>
+            <T>
+              Connecting to <Var>{connectingHost.alias}</Var>…
+            </T>
+          </DialogTitle>
           <DialogDescription>
-            The first time, this installs M3 Code on {connectingHost.alias}. It can take a minute.
+            <T>
+              The first time, this installs ZZZ Code on <Var>{connectingHost.alias}</Var>. It can
+              take a minute.
+            </T>
           </DialogDescription>
         </DialogHeader>
         <DialogPanel>
@@ -219,7 +228,7 @@ function MachineStep({
         </DialogPanel>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onCancelConnect}>
-            Back
+            <T>Back</T>
           </Button>
         </DialogFooter>
       </>
@@ -229,8 +238,12 @@ function MachineStep({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Add project</DialogTitle>
-        <DialogDescription>Where is the project?</DialogDescription>
+        <DialogTitle>
+          <T>Add project</T>
+        </DialogTitle>
+        <DialogDescription>
+          <T>Where is the project?</T>
+        </DialogDescription>
       </DialogHeader>
       <DialogPanel>
         {error ? (
@@ -260,7 +273,7 @@ function MachineStep({
                     />
                     <span className="truncate">
                       {isPrimaryEnvironment(environment) && connected
-                        ? "This computer"
+                        ? gt("This computer")
                         : connectionStatusText(environment.connection)}
                     </span>
                   </span>
@@ -274,28 +287,32 @@ function MachineStep({
               onClick={() => onPickSshHost(host)}
               icon={<TerminalIcon className="size-4 shrink-0" />}
               title={host.alias}
-              detail={`SSH · ${formatDesktopSshTarget(host)} · not connected yet`}
+              detail={gt("SSH · {target} · not connected yet", {
+                target: formatDesktopSshTarget(host),
+              })}
             />
           ))}
           {hasDesktopBridge && sshHosts.isPending && sshHosts.data === null ? (
             <div className="flex items-center gap-2 px-3 py-2 text-muted-foreground text-xs">
               <Spinner size="xs" />
-              Reading SSH hosts…
+              <T>Reading SSH hosts…</T>
             </div>
           ) : null}
         </div>
         {hasDesktopBridge ? (
           <p className="text-muted-foreground text-xs">
-            SSH hosts come from ~/.ssh/config. Picking one connects it.
+            <T>
+              SSH hosts come from <Var>~/.ssh/config</Var>. Picking one connects it.
+            </T>
           </p>
         ) : null}
       </DialogPanel>
       <DialogFooter>
         <Button type="button" variant="ghost" onClick={openOtherSources}>
-          Clone or create new…
+          <T>Clone or create new…</T>
         </Button>
         <Button type="button" variant="outline" onClick={closeAddProjectDialog}>
-          Cancel
+          <T>Cancel</T>
         </Button>
       </DialogFooter>
     </>
@@ -342,9 +359,10 @@ function FolderStep({
   environment: EnvironmentPresentation | null;
   onBack: () => void;
 }) {
+  const gt = useGT();
   const id = useId();
   const environmentId = environment?.environmentId ?? null;
-  const label = environment ? environmentLabel(environment) : "the new machine";
+  const label = environment ? environmentLabel(environment) : null;
   const connected = canCreateProjectInEnvironment(environment?.connection.phase);
   const [pathOverride, setPathOverride] = useState<string | null>(null);
   const path =
@@ -417,13 +435,15 @@ function FolderStep({
   const body = !connected ? (
     <div className="flex items-center gap-2 text-muted-foreground text-sm">
       <Spinner size="md" />
-      {environment ? connectionStatusText(environment.connection) : "Connecting…"}
+      {environment ? connectionStatusText(environment.connection) : gt("Connecting…")}
     </div>
   ) : (
     <>
       <Input
         id={`${id}-path`}
-        aria-label={`Folder on ${label}`}
+        aria-label={
+          label === null ? gt("Folder on the new machine") : gt("Folder on {label}", { label })
+        }
         value={path}
         onChange={(event) => {
           setPathOverride(resolvePastedPath(path, event.target.value));
@@ -455,7 +475,7 @@ function FolderStep({
           error={
             access.isPending || access.canReadFiles
               ? browse.error
-              : (access.error ?? "This connection cannot browse folders.")
+              : (access.error ?? gt("This connection cannot browse folders."))
           }
           empty={listing !== null && listing.entries.length === 0}
         />
@@ -472,16 +492,26 @@ function FolderStep({
       }}
     >
       <DialogHeader>
-        <DialogTitle>Add project on {label}</DialogTitle>
-        <DialogDescription>Pick a folder. A missing folder is created.</DialogDescription>
+        <DialogTitle>
+          {label === null ? (
+            <T>Add project on the new machine</T>
+          ) : (
+            <T>
+              Add project on <Var>{label}</Var>
+            </T>
+          )}
+        </DialogTitle>
+        <DialogDescription>
+          <T>Pick a folder. A missing folder is created.</T>
+        </DialogDescription>
       </DialogHeader>
       <DialogPanel>{body}</DialogPanel>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onBack}>
-          Back
+          <T>Back</T>
         </Button>
         <Button type="submit" disabled={!connected || submitting || path.trim().length === 0}>
-          {submitting ? "Adding…" : "Add project"}
+          {submitting ? <T>Adding…</T> : <T>Add project</T>}
         </Button>
       </DialogFooter>
     </form>
@@ -497,7 +527,8 @@ function FolderListStatus({
   error: string | null;
   empty: boolean;
 }) {
-  const message = error ?? (empty ? "No folders inside." : null);
+  const gt = useGT();
+  const message = error ?? (empty ? gt("No folders inside.") : null);
   if (!pending && message === null) return null;
   return (
     <div
@@ -507,7 +538,7 @@ function FolderListStatus({
       )}
     >
       {pending ? <Spinner size="xs" /> : null}
-      {pending ? "Loading…" : message}
+      {pending ? <T>Loading…</T> : message}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 # Encrypted remote control
 
-Controlling M3 Code from another device sends your prompts, files and agent output over the
+Controlling ZZZ Code from another device sends your prompts, files and agent output over the
 network. Two optional settings protect that traffic. Both are off by default, so nothing changes
 until you turn them on, and the official T3 Code mobile app keeps working.
 
@@ -48,8 +48,8 @@ client also checks the host's identity, so someone in the middle cannot pose as 
 
 ## Which one do I want?
 
-| Situation | Use |
-| --- | --- |
-| Only your own devices over Tailscale or SSH | **Private transports only** is enough. |
-| Reaching the host through a tunnel or an untrusted network | **End-to-end encryption**, paired from a fresh link. |
-| Both | Turn both on. Tunnels are then refused, and the rest is encrypted. |
+| Situation                                                  | Use                                                                |
+| ---------------------------------------------------------- | ------------------------------------------------------------------ |
+| Only your own devices over Tailscale or SSH                | **Private transports only** is enough.                             |
+| Reaching the host through a tunnel or an untrusted network | **End-to-end encryption**, paired from a fresh link.               |
+| Both                                                       | Turn both on. Tunnels are then refused, and the rest is encrypted. |

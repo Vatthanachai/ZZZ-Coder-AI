@@ -231,9 +231,11 @@ describe("PiProvider", () => {
   ] as const)("gives `pi --version` 10 s when it $label", (row) =>
     Effect.gen(function* () {
       const spawned: Array<string> = [];
+      const versionStarted = yield* Deferred.make<void>();
       const spawner = ChildProcessSpawner.make((command) => {
         const args = ChildProcess.isStandardCommand(command) ? command.args : [];
         spawned.push(args.join(" "));
+        if (args.includes("--version")) Deferred.doneUnsafe(versionStarted, Effect.void);
         return Effect.succeed(
           args.includes("--version")
             ? processHandle({ stdout: "pi 0.84.3\n", answered: Effect.sleep(row.versionDelay) })
@@ -244,6 +246,8 @@ describe("PiProvider", () => {
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
         Effect.forkChild,
       );
+      // Resolving the executable first can take real time (Windows checks PATHEXT on disk).
+      yield* Deferred.await(versionStarted);
       yield* TestClock.adjust("10 seconds");
       const snapshot = yield* Fiber.join(fiber);
       assert.equal(snapshot.status, row.status);

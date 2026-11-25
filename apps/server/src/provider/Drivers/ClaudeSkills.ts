@@ -672,7 +672,7 @@ const decodeSettingsEnv = Schema.decodeUnknownEffect(
   fromLenientJson(Schema.Struct({ env: Schema.optional(SettingsEnv) })),
 );
 
-/** The `env` values M3 Code reads from Claude's user and managed settings; later files win. */
+/** The `env` values ZZZ Code reads from Claude's user and managed settings; later files win. */
 export const readClaudeSettingsEnv = Effect.fn("readClaudeSettingsEnv")(function* (
   config: Pick<ClaudeSettings, "homePath">,
   cwd: string | undefined,

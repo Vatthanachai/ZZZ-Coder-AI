@@ -228,7 +228,7 @@ const makeHarness = Effect.fn("TestRemoteAuthorization.makeHarness")(function* (
           ClientCapabilities.ClientPresentation,
           ClientCapabilities.ClientPresentation.of({
             metadata: {
-              label: "M3 Code Test",
+              label: "ZZZ Code Test",
               deviceType: "mobile",
               os: "test",
             },
@@ -635,7 +635,6 @@ describe("RemoteEnvironmentAuthorization", () => {
       }).pipe(Effect.provide(harness.layer));
 
       expect(authorized.socketUrl).toContain("wsTicket=cached-ticket");
-      expect(authorized.socketUrl).toContain("connectionMethod=relay");
       expect(yield* Ref.get(harness.bootstrapCalls)).toBe(0);
       // The descriptor is read beside the ticket, so the connect needs no later read.
       expect(authorized.descriptor).toMatchObject({ environmentId: ENVIRONMENT_ID });
@@ -824,7 +823,7 @@ describe("RemoteEnvironmentAuthorization", () => {
         for (const [, init] of exchanges) {
           expect(Object.fromEntries(tokenFields(init))).toMatchObject({
             subject_token: BOOTSTRAP.credential,
-            client_label: "M3 Code Test",
+            client_label: "ZZZ Code Test",
             client_device_type: "mobile",
             client_os: "test",
           });

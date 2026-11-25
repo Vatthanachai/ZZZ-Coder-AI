@@ -336,7 +336,7 @@ export function LocalModelChoice(props: {
             : voice.canManage
               ? gt("No model installed · Choose one to download")
               : gt("No model installed · Add one using {product} on {environment}", {
-                  product: "M3 Code",
+                  product: "ZZZ Code",
                   environment: props.label,
                 })
       }

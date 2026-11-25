@@ -2,7 +2,7 @@
 
 ## Goal
 
-Make M3 Code a more reliable, economical interface for local coding agents by improving **task success per context token and GPU-second**, rather than adding another inference backend.
+Make ZZZ Code a more reliable, economical interface for local coding agents by improving **task success per context token and GPU-second**, rather than adding another inference backend.
 
 The fork already has local-server discovery, strict local-only routing, per-server queuing, prompt-cache diagnostics, watchdogs, fallback, vision probes, and Pi/OpenCode/Codex integration. This plan extends those strengths with better measurements, protocol recovery, model-specific defaults, prompt economy, and compaction.
 
@@ -35,7 +35,7 @@ These results are directional, not a universal model ranking. The fixtures simul
 ### Work
 
 1. Select two or three representative local models across sizes/families that the maintainer already runs.
-2. Record model, quantization, server/version, protocol, harness, context size, GPU/hardware, sampling defaults, and M3 Code revision.
+2. Record model, quantization, server/version, protocol, harness, context size, GPU/hardware, sampling defaults, and ZZZ Code revision.
 3. Freeze the existing MCP/tool-use result as the compatibility baseline.
 4. Define result directories and a repeatable command for the new coding eval; use an isolated copy of real configuration rather than the live T3 database.
 5. Record the baseline before implementing recovery or profile changes.
@@ -274,7 +274,7 @@ Do this only if measurements show queueing or discoverability is limiting actual
 
 ## Non-goals
 
-- Building an inference engine, model downloader, or quantization manager into M3 Code.
+- Building an inference engine, model downloader, or quantization manager into ZZZ Code.
 - Supporting every serving backend through a universal protocol translator.
 - Adding default RAG/semantic memory before search and compaction are measured.
 - Automatically falling back to cloud inference for local-only work.

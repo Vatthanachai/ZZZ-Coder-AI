@@ -1664,7 +1664,7 @@ function createTerminalSpawnEnv(
     spawnEnv[key] = value;
   }
   // The server inherits its launcher's identity (e.g. Apple_Terminal); shells
-  // and tools inside the integrated terminal should see M3 Code instead.
+  // and tools inside the integrated terminal should see ZZZ Code instead.
   spawnEnv.TERM_PROGRAM = "t3code";
   spawnEnv.TERM_PROGRAM_VERSION = packageJson.version;
   if (runtimeEnv) {

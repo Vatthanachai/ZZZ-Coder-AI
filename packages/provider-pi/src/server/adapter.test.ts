@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as Path from "effect/Path";
 import {
   CheckpointId,
   ChatAttachmentId,
@@ -3211,10 +3212,12 @@ describe("PiAdapterV2", () => {
   it.effect("recovers a historical Pi fork recorded before turns stored the session file", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
       const dir = yield* fs.makeTempDirectoryScoped();
-      const oldFile = `${dir}/original.jsonl`;
-      const unrelatedFile = `${dir}/unrelated.jsonl`;
-      const currentFile = `${dir}/current.jsonl`;
+      // The adapter normalizes session paths, so build them with the host's separators.
+      const oldFile = path.join(dir, "original.jsonl");
+      const unrelatedFile = path.join(dir, "unrelated.jsonl");
+      const currentFile = path.join(dir, "current.jsonl");
       const header = { type: "session", version: 3 };
       const writeSession = (file: string, entries: ReadonlyArray<unknown>) =>
         fs.writeFileString(

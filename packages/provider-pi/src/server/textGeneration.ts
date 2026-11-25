@@ -4,7 +4,7 @@ import * as Queue from "effect/Queue";
 import * as Schema from "effect/Schema";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import { ProviderDriverKind, TextGenerationError } from "@t3tools/contracts";
+import { TextGenerationError } from "@t3tools/contracts";
 import { getModelSelectionStringOptionValue } from "@t3tools/shared/model";
 import {
   brokenVersionDetail,
@@ -59,7 +59,7 @@ export const makePiTextGeneration = Effect.fn("makePiTextGeneration")(function* 
             : null;
         const broken =
           version === null
-            ? `M3 Code could not determine the ${flavor.displayName} version. Update ${flavor.displayName} and try again.`
+            ? `ZZZ Code could not determine the ${flavor.displayName} version. Update ${flavor.displayName} and try again.`
             : brokenVersionDetail({
                 name: flavor.displayName,
                 version,

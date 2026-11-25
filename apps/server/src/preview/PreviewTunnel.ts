@@ -35,7 +35,7 @@ export class PreviewTunnelPortRefusedError extends Schema.TaggedError<PreviewTun
   { port: Schema.Number },
 ) {
   override get message(): string {
-    return `Port ${this.port} is this M3 Code server's own port.`;
+    return `Port ${this.port} is this ZZZ Code server's own port.`;
   }
 }
 
@@ -44,7 +44,7 @@ export class PreviewTunnelDisabledError extends Schema.TaggedError<PreviewTunnel
   {},
 ) {
   override get message(): string {
-    return "The preview tunnel is turned off on this M3 Code server.";
+    return "The preview tunnel is turned off on this ZZZ Code server.";
   }
 }
 

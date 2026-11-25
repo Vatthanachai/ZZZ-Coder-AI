@@ -41,6 +41,9 @@ import {
 } from "./maintenanceResolver.ts";
 import { symlinksSupported } from "@t3tools/shared/testing/symlinks";
 
+// These cases lay out npm, pnpm, Yarn, Volta and Homebrew installs the POSIX way, with symlinks.
+const onWindowsHost = HostProcess.Platform.defaultValue() === "win32";
+
 const driver = (value: string) => ProviderDriverKind.make(value);
 // Shell stubs use POSIX paths; Windows temp paths cannot split on colon.
 const windowsHost = HostProcess.Platform.defaultValue() === "win32";
@@ -618,7 +621,7 @@ it.layer(
       updateCommand: null,
       canUpdate: false,
       message:
-        "Version 2.1.117 is out. M3 Code runs /Applications/Tool.app/Contents/Resources/bin/package-tool; update it with the app or tool that installed it.",
+        "Version 2.1.117 is out. ZZZ Code runs /Applications/Tool.app/Contents/Resources/bin/package-tool; update it with the app or tool that installed it.",
     });
   });
 
@@ -675,7 +678,7 @@ it.layer(
     ),
   );
 
-  it.effect.skipIf(!symlinksSupported)(
+  it.effect.skipIf(!symlinksSupported || onWindowsHost)(
     "pins npm updates to the global prefix that owns the package and the provider's PATH",
     () =>
       Effect.gen(function* () {
@@ -1145,29 +1148,34 @@ it.layer(
   );
 
   // `vp env off` makes each shim run the next matching executable on PATH instead.
-  it.effect.each([
-    {
-      name: "a system_first shim (VP_HOME layout) to a later install",
-      vpHome: ".vite-plus",
-      setVpHome: true,
-      configs: { ".vite-plus": "system_first" },
-      vitePlus: false,
-    },
-    {
-      name: "a system_first shim (XDG layout) to a later install",
-      vpHome: ".local/share/vite-plus",
-      setVpHome: false,
-      configs: { ".config/vite-plus": "system_first" },
-      vitePlus: false,
-    },
-    {
-      name: "a managed VP_HOME shim despite a system_first XDG config",
-      vpHome: ".local/share/vite-plus",
-      setVpHome: true,
-      configs: { ".local/share/vite-plus": "managed", ".config/vite-plus": "system_first" },
-      vitePlus: true,
-    },
-  ] as const)("updates through vp only for the install the shim runs: $name", (fixture) =>
+  it.effect.each(
+    (
+      [
+        {
+          name: "a system_first shim (VP_HOME layout) to a later install",
+          vpHome: ".vite-plus",
+          setVpHome: true,
+          configs: { ".vite-plus": "system_first" },
+          vitePlus: false,
+        },
+        {
+          name: "a system_first shim (XDG layout) to a later install",
+          vpHome: ".local/share/vite-plus",
+          setVpHome: false,
+          configs: { ".config/vite-plus": "system_first" },
+          vitePlus: false,
+        },
+        {
+          name: "a managed VP_HOME shim despite a system_first XDG config",
+          vpHome: ".local/share/vite-plus",
+          setVpHome: true,
+          configs: { ".local/share/vite-plus": "managed", ".config/vite-plus": "system_first" },
+          vitePlus: true,
+        },
+        // A system_first shim finds the later install by POSIX PATH lookup.
+      ] as const
+    ).filter((fixture) => fixture.vitePlus || !onWindowsHost),
+  )("updates through vp only for the install the shim runs: $name", (fixture) =>
     Effect.gen(function* () {
       const tempDir = yield* makeTempDir("vite-plus-system-first");
       const vpHome = NodePath.join(tempDir, fixture.vpHome);
@@ -1318,7 +1326,7 @@ it.layer(
     }),
   );
 
-  it.effect.skipIf(!symlinksSupported)(
+  it.effect.skipIf(!symlinksSupported || onWindowsHost)(
     "switches to pnpm updates when the real path lives in pnpm's global store",
     () =>
       Effect.gen(function* () {
@@ -1844,7 +1852,7 @@ it.layer(
       }),
   );
 
-  it.effect.skipIf(!symlinksSupported)(
+  it.effect.skipIf(!symlinksSupported || onWindowsHost)(
     "prefers npm ownership over the Node keg the package lives under",
     () =>
       Effect.gen(function* () {
@@ -2583,36 +2591,41 @@ it.layer(
     { skip: !symlinksSupported || windowsHost },
   );
 
-  it.effect.skipIf(!symlinksSupported)("updates Yarn global installs with yarn", () =>
-    Effect.gen(function* () {
-      const tempDir = yield* makeTempDir("t3-yarn-capabilities");
-      const link = linkIntoPackage(tempDir, "package-tool", [
-        ".config",
-        "yarn",
-        "global",
-        "node_modules",
-        "@example",
-        "package-tool",
-      ]);
+  it.effect.skipIf(!symlinksSupported || onWindowsHost)(
+    "updates Yarn global installs with yarn",
+    () =>
+      Effect.gen(function* () {
+        const tempDir = yield* makeTempDir("t3-yarn-capabilities");
+        const link = linkIntoPackage(tempDir, "package-tool", [
+          ".config",
+          "yarn",
+          "global",
+          "node_modules",
+          "@example",
+          "package-tool",
+        ]);
 
-      const capabilities = yield* resolveProviderMaintenanceCapabilitiesEffect(packageToolUpdate, {
-        binaryPath: link,
-        env: { PATH: "" },
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, noSpawn));
+        const capabilities = yield* resolveProviderMaintenanceCapabilitiesEffect(
+          packageToolUpdate,
+          {
+            binaryPath: link,
+            env: { PATH: "" },
+          },
+        ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, noSpawn));
 
-      expect(capabilities.update).toMatchObject({
-        command: "yarn global add @example/package-tool@latest",
-        lockKey: "yarn-global",
-      });
-      expect(makeTargetedProviderUpdateAction(capabilities, "2.0.0")?.args).toEqual([
-        "global",
-        "add",
-        "@example/package-tool@2.0.0",
-      ]);
-    }),
+        expect(capabilities.update).toMatchObject({
+          command: "yarn global add @example/package-tool@latest",
+          lockKey: "yarn-global",
+        });
+        expect(makeTargetedProviderUpdateAction(capabilities, "2.0.0")?.args).toEqual([
+          "global",
+          "add",
+          "@example/package-tool@2.0.0",
+        ]);
+      }),
   );
 
-  it.effect.skipIf(!symlinksSupported)(
+  it.effect.skipIf(!symlinksSupported || onWindowsHost)(
     "updates Volta installs only when Volta has the package",
     () =>
       Effect.gen(function* () {

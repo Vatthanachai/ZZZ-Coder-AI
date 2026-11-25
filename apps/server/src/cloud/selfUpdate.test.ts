@@ -9,6 +9,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as Schedule from "effect/Schedule";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
@@ -63,7 +64,19 @@ const makeHarness = Effect.fn("test.make_self_update_harness")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const baseDir = yield* fs.makeTempDirectoryScoped({ prefix: "t3-self-update-test-" });
+  // An accepted update can still be writing when the test ends, and Windows refuses to remove a
+  // directory that gains an entry mid-delete, so cleanup retries briefly.
+  const baseDir = yield* Effect.acquireRelease(
+    fs.makeTempDirectory({ prefix: "t3-self-update-test-" }),
+    (directory) =>
+      fs
+        .remove(directory, { recursive: true })
+        .pipe(
+          Effect.retry({ times: 20, schedule: Schedule.spaced("25 millis") }),
+          TestClock.withLive,
+          Effect.ignore,
+        ),
+  );
   const order: string[] = [];
   const urls: string[] = [];
   const preflightProtocols: Array<string | undefined> = [];
@@ -275,7 +288,7 @@ it.layer(NodeServices.layer)("server self update", (it) => {
       for (const harness of [service, desktop]) {
         expect(
           (yield* harness.selfUpdate.update({ targetVersion: "1.1.0" }).pipe(Effect.flip)).reason,
-        ).toBe("Example Corp manages M3 Code updates.");
+        ).toBe("Example Corp manages ZZZ Code updates.");
       }
       expect([...service.order, ...desktop.order]).toEqual([]);
     }),
@@ -299,7 +312,7 @@ it.layer(NodeServices.layer)("server self update", (it) => {
       expect(
         (yield* selfUpdate.update({ targetVersion: "1.2.0-nightly.20261028.1" }).pipe(Effect.flip))
           .reason,
-      ).toBe("Example Corp manages M3 Code updates. Only stable releases can be installed.");
+      ).toBe("Example Corp manages ZZZ Code updates. Only stable releases can be installed.");
       expect(order).toEqual([]);
       // The mirror lists only 1.1.0's archive.
       expect((yield* selfUpdate.update({ targetVersion: "1.2.0" }).pipe(Effect.flip)).reason).toBe(

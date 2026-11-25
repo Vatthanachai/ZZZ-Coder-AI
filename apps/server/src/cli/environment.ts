@@ -235,7 +235,7 @@ const environmentLinkCommand = Command.make("link", {
   ),
 }).pipe(
   Command.withDescription(
-    "Link another M3 Code environment, so agents here can work there. It shows up there under Authorized clients in Settings → Sharing & access, where it can be revoked.",
+    "Link another ZZZ Code environment, so agents here can work there. It shows up there under Authorized clients in Settings → Sharing & access, where it can be revoked.",
   ),
   Command.withHandler((flags) =>
     Effect.gen(function* () {
@@ -319,7 +319,7 @@ const environmentUnlinkCommand = Command.make("unlink", {
 );
 
 export const environmentCommand = Command.make("environment").pipe(
-  Command.withDescription("Link other M3 Code environments, so agents here can work there."),
+  Command.withDescription("Link other ZZZ Code environments, so agents here can work there."),
   Command.withSubcommands([
     environmentLinkCommand,
     environmentListCommand,

@@ -35,7 +35,7 @@ function withTempDir<A, E, R>(
   use: (dir: string) => Effect.Effect<A, E, R>,
 ): Effect.Effect<A, E, R> {
   return Effect.acquireUseRelease(
-    Effect.sync(() => NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "m3-mtls-test-"))),
+    Effect.sync(() => NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "zzz-mtls-test-"))),
     use,
     (dir) => Effect.sync(() => NodeFS.rmSync(dir, { recursive: true, force: true })),
   );

@@ -5,7 +5,7 @@ appearance or stay in light or dark mode. To use different themes for light and 
 the corresponding preview within each theme. Appearance preferences are saved separately on each
 device or browser.
 
-The standard M3 Code theme has two dark styles: **Dark**, a dark gray, and **OLED**, true black for
+The standard ZZZ Code theme has two dark styles: **Dark**, a dark gray, and **OLED**, true black for
 OLED screens. Pick one with its tile; **System** uses the one you picked last for its dark half.
 Other themes keep their own dark colors.
 
@@ -54,14 +54,14 @@ without replaying its transitions.
 
 ## Custom themes
 
-On web and desktop, choose **Create theme** to adjust a palette, or import a M3 Code or VS Code
+On web and desktop, choose **Create theme** to adjust a palette, or import a ZZZ Code or VS Code
 theme. The theme editor's color picker lets you select an area of the app to find the color to
 change. Export your theme as JSON to share it.
 
 ### Custom CSS
 
 For a change that colors cannot make, open **Custom CSS** in the theme editor. The CSS is saved with
-the theme, applies after M3 Code's own styles on web and desktop, and is included in exports. Use
+the theme, applies after ZZZ Code's own styles on web and desktop, and is included in exports. Use
 `.dark` or `:root:not(.dark)` to target one appearance.
 
 Custom CSS cannot load files. `@import`, `image-set()`, and `url()` are ignored, except `url()`
@@ -77,8 +77,8 @@ another theme.
 
 ### Ask an agent
 
-An agent on the same machine as the server can restyle M3 Code for you. Ask it to change the look,
-for example "make M3 Code's chat header taller" or "give M3 Code a solarized theme". It publishes
+An agent on the same machine as the server can restyle ZZZ Code for you. Ask it to change the look,
+for example "make ZZZ Code's chat header taller" or "give ZZZ Code a solarized theme". It publishes
 an [environment theme](#environment-themes) with colors and CSS, and web and desktop clients of that
 server switch to it. It can also switch them to light, dark, or system mode. The thread must run
 in Full access. Ask the agent to set a built-in theme to undo it.
@@ -92,7 +92,7 @@ it. app.t3.codes and other connections do not use them.
 
 Select a published theme in **Settings → Appearance** to follow its palette as the server updates
 it. **Duplicate** makes an independent copy you can edit. A saved custom theme with the same ID
-takes precedence. If the server stops publishing the selected theme, M3 Code falls back to its
+takes precedence. If the server stops publishing the selected theme, ZZZ Code falls back to its
 standard theme.
 
 Run this on the server to set a default and switch connected clients to it:
@@ -110,7 +110,7 @@ the default and published themes.
 
 ### Publish a theme
 
-Save a theme exported from M3 Code into `~/.t3/userdata/themes/` on the server, or the `themes`
+Save a theme exported from ZZZ Code into `~/.t3/userdata/themes/` on the server, or the `themes`
 directory under your custom state directory. The filename supplies the theme ID: `nightfall.json`
 can be selected with `t3 theme set nightfall`. Keep the filename stable when updating its colors.
 Do not use `system`, `light`, `dark`, or a built-in theme's ID.
@@ -130,7 +130,7 @@ For an integration that generates a palette, this shorter format also works:
 }
 ```
 
-Set `appearance` to `light` or `dark` and supply hex colors for `canvas` and `accent`. M3 Code
+Set `appearance` to `light` or `dark` and supply hex colors for `canvas` and `accent`. ZZZ Code
 generates the rest. The optional `colors` overrides use the names in the theme editor's advanced
 view. An optional `css` string adds [custom CSS](#custom-css).
 
@@ -140,7 +140,7 @@ Invalid files are not published.
 ### Background image
 
 A published theme can have a full-size background image. Ask an agent, for example "use
-~/Pictures/wallpaper.jpg as M3 Code's background", or save a JPEG, PNG, or WebP file of up to
+~/Pictures/wallpaper.jpg as ZZZ Code's background", or save a JPEG, PNG, or WebP file of up to
 16 MB beside the theme file: `nightfall.jpg` beside `nightfall.json`. The theme's CSS decides
 where the image shows:
 

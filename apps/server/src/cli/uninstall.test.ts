@@ -202,12 +202,15 @@ it.layer(NodeServices.layer)("t3 uninstall launcher", (it) => {
       const script = path.join(scriptDir, "t3");
       yield* fs.makeDirectory(scriptDir);
       yield* fs.writeFileString(script, posixLauncherScript(exe), { mode: 0o755 });
-      assert.equal(
-        yield* findOwnedLauncher({ launchedAs: exe, versionsDir }).pipe(
-          Effect.provideService(HostProcess.Environment, { PATH: scriptDir }),
-        ),
-        script,
-      );
+      // Finding the script on PATH needs its POSIX execute bit, which Windows does not keep.
+      if (HostProcess.Platform.defaultValue() !== "win32") {
+        assert.equal(
+          yield* findOwnedLauncher({ launchedAs: exe, versionsDir }).pipe(
+            Effect.provideService(HostProcess.Environment, { PATH: scriptDir }),
+          ),
+          script,
+        );
+      }
       const editedScript = path.join(scriptDir, "t3-edited");
       yield* fs.writeFileString(editedScript, `${posixLauncherScript(exe)}# mine\n`);
 

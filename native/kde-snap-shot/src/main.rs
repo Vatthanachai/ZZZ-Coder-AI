@@ -374,7 +374,7 @@ fn run() -> Result<()> {
                 ),
             )?;
             if serde_json::from_str::<serde_json::Value>(&value)?["activated"] != true {
-                return Err("KDE could not identify the M3 Code window to activate".into());
+                return Err("KDE could not identify the ZZZ Code window to activate".into());
             }
             println!("{{\"activated\":true}}");
         }

@@ -3,6 +3,7 @@ import * as NodeFSP from "node:fs/promises";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import * as HostProcess from "@t3tools/shared/HostProcess";
 const execute = vi.hoisted(() => vi.fn());
 const startEffects = vi.hoisted(() => vi.fn());
 vi.mock("node:child_process", () => ({ execFile: execute }));
@@ -19,6 +20,9 @@ import {
   hyprlandCaptureShortcut,
 } from "./HyprlandSnapShot.ts";
 import { CaptureSetupRequiredError } from "./linuxCaptureSession.ts";
+
+// The installed helper's POSIX mode bits do not exist on Windows.
+const onWindowsHost = HostProcess.Platform.defaultValue() === "win32";
 
 let directory: string;
 let paths: { bundle: string; dataHome: string };
@@ -67,14 +71,17 @@ beforeEach(async () => {
 afterEach(async () => {
   await NodeFSP.rm(directory, { recursive: true, force: true });
 });
-it("installs offline at a stable executable path and probes only capabilities", async () => {
-  await setup.perform("install-hyprland-helper");
-  expect((await NodeFSP.stat(hyprlandCaptureExecutable(paths))).mode & 0o777).toBe(0o755);
-  expect(await setup.state()).toMatchObject({ status: "ready", feedbackAvailable: true });
-  expect(execute.mock.calls.map(([file, args]) => [file, args])).toEqual([
-    [hyprlandCaptureExecutable(paths), ["check"]],
-  ]);
-});
+it.skipIf(onWindowsHost)(
+  "installs offline at a stable executable path and probes only capabilities",
+  async () => {
+    await setup.perform("install-hyprland-helper");
+    expect((await NodeFSP.stat(hyprlandCaptureExecutable(paths))).mode & 0o777).toBe(0o755);
+    expect(await setup.state()).toMatchObject({ status: "ready", feedbackAvailable: true });
+    expect(execute.mock.calls.map(([file, args]) => [file, args])).toEqual([
+      [hyprlandCaptureExecutable(paths), ["check"]],
+    ]);
+  },
+);
 it("updates explicitly and removes only its helper", async () => {
   await setup.perform("install-hyprland-helper");
   const unrelated = NodePath.join(paths.dataHome, "keep.txt");

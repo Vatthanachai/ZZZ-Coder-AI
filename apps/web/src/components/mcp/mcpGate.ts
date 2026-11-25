@@ -43,7 +43,7 @@ export function resolveMcpGate(
     readonly linkStateError: string | null;
     /** A backend this device runs; its link state names its own tunnel. */
     readonly thisMachine: boolean;
-    /** Direct HTTP(S) `/mcp` URL when connecting locally, over LAN/WireGuard, or via M3 Server. */
+    /** Direct HTTP(S) `/mcp` URL when connecting locally, over LAN/WireGuard, or via ZZZ Server. */
     readonly directMcpUrl?: string | null;
     /** The account's machines on T3 Connect, where a saved machine's address and health come from. */
     readonly relay:

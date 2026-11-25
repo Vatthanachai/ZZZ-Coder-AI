@@ -1,5 +1,4 @@
 import {
-  DEFAULT_TEXT_GENERATION_MODEL_BY_PROVIDER,
   ProjectId,
   ProviderDriverKind,
   type ModelSelection,
@@ -526,9 +525,9 @@ it.layer(layerCodexTextGenerationTest)("CodexTextGeneration", (it) => {
     ),
   );
 
-  it.effect("identifies codex exec as M3 Code", () =>
+  it.effect("identifies codex exec as ZZZ Code", () =>
     withFakeCodexEnv(
-      { output: JSON.stringify({ title: "Live title" }), requireOriginator: "M3 Code" },
+      { output: JSON.stringify({ title: "Live title" }), requireOriginator: "ZZZ Code" },
       (textGeneration) =>
         Effect.gen(function* () {
           const result = yield* textGeneration.generateThreadTitle({
@@ -727,21 +726,6 @@ it.effect.each(PREFLIGHT_PRIMARY_STATES)("text generation preflight: %s", (prima
               ],
             }
           : {}),
-        ...((primaryState === "not installed, fallback model cannot generate text" ||
-          primaryState === "disabled, thread default model cannot generate text") &&
-        instanceId === fallback
-          ? {
-              models: [
-                {
-                  slug: threadDefault.model,
-                  name: threadDefault.model,
-                  isCustom: true,
-                  supportsTextGeneration: false,
-                  capabilities: null,
-                },
-              ],
-            }
-          : {}),
         ...(primaryState.startsWith("disabled") && instanceId === primary
           ? { enabled: false, status: "disabled" }
           : {}),
@@ -815,10 +799,7 @@ it.effect.each(PREFLIGHT_PRIMARY_STATES)("text generation preflight: %s", (prima
         cwd: "/tmp",
         message: "hello",
         linkedContext: "",
-        modelSelection:
-          primaryState === "disabled, thread default model cannot generate text"
-            ? threadDefault
-            : selection,
+        modelSelection: selection,
         projectId,
       })
       .pipe(Effect.exit);
@@ -834,14 +815,7 @@ it.effect.each(PREFLIGHT_PRIMARY_STATES)("text generation preflight: %s", (prima
       primaryState === "not installed, fallback disabled for project" ||
       primaryState === "signed out, fallback failed"
         ? selection
-        : primaryState === "not installed, fallback model cannot generate text" ||
-            primaryState === "disabled, thread default model cannot generate text"
-          ? {
-              instanceId: fallback,
-              model:
-                DEFAULT_TEXT_GENERATION_MODEL_BY_PROVIDER[ProviderDriverKind.make("claudeAgent")],
-            }
-          : threadDefault,
+        : threadDefault,
     ]);
   }),
 );
@@ -897,7 +871,8 @@ it.effect(
                 getInstance: (id) =>
                   Effect.succeed(instances.find((candidate) => candidate.instanceId === id)),
               }),
-              ServerSettings.layerTest({}),
+              // Claude is not a local instance, so only "Any provider" lets the guide fall back to it.
+              ServerSettings.layerTest({ textGenerationFallback: "any" }),
               Layer.mock(TextGenerators.TextGenerators)({
                 runner: (id) =>
                   Effect.succeed(

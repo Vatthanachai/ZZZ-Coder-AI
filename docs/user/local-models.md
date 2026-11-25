@@ -2,11 +2,11 @@
 
 Run your agents on models served from your own hardware: Ollama, LM Studio,
 llama.cpp's `llama-server`, vLLM, SGLang, or anything else that speaks the OpenAI
-or Anthropic API. M3 Code does not run models itself. A provider such as Pi or
-OpenCode talks to your inference server, and M3 Code drives that provider.
+or Anthropic API. ZZZ Code does not run models itself. A provider such as Pi or
+OpenCode talks to your inference server, and ZZZ Code drives that provider.
 
 The inference server must be reachable from the environment's machine. `localhost`
-means the machine running the M3 Code server, even when you are connected from a
+means the machine running the ZZZ Code server, even when you are connected from a
 phone or another computer.
 
 For routing proxies that use `x-proxy-session-id` and `x-proxy-turn-id`, the managed
@@ -18,7 +18,7 @@ not authenticate requests or prevent the proxy from routing to a cloud model.
 ## Use a local model
 
 The quickest start is **Use a local model**: on first run under **Agents**, in **Settings →
-Inference**, from the model picker, or from the command palette. M3 Code looks for model
+Inference**, from the model picker, or from the command palette. ZZZ Code looks for model
 servers on the environment's machine (the usual ports for Ollama, LM Studio, llama.cpp, vLLM and
 SGLang, and on Linux every port the machine listens on) and on hosts you already registered. Pick
 a model and an agent, and it registers the server, links the agent to it, and makes that model
@@ -32,7 +32,7 @@ its address if it uses another one.
 
 Open **Settings → Inference** and add each model server with **Add server**: its **Base URL**
 (such as `http://localhost:11434/v1`), an optional name and API key, and optionally **Max
-concurrent requests**. M3 Code checks each server and shows whether it is ready, the models it
+concurrent requests**. ZZZ Code checks each server and shows whether it is ready, the models it
 serves with their context windows, and its current load when the server reports one. **Refresh**
 checks again.
 
@@ -51,7 +51,7 @@ moves the server there and keeps its name, key, and linked agents. Threads alrea
 the old address until their agent session restarts.
 
 Each server also shows when it was last checked, marked overdue when checks have stopped, whether
-it reports cached prompt tokens, and the last request through M3 Code that failed or was rejected
+it reports cached prompt tokens, and the last request through ZZZ Code that failed or was rejected
 in the past hour. Cached tokens show as `unknown` until a request in the last day comes back with a
 cached count, so a server that never reports one cannot show its cache reuse anywhere.
 
@@ -59,13 +59,13 @@ A TensorFold server also shows its prompt cache, such as `Prompt cache 8.5 / 8.5
 prompts · 85% of prompt tokens cached recently`: how much of its cache budget holds saved
 prompts, how many it holds, and how much of the prompts sent since the previous check were read
 from cache instead of computed again. A full cache is normal. A larger prompt cache keeps more
-threads warm, so returning to one starts quickly; M3 Code warns only when the cache is full and
+threads warm, so returning to one starts quickly; ZZZ Code warns only when the cache is full and
 the cached share is falling, which means threads are being pushed out. A server without a prompt
 cache shows `No prompt cache: every request reads its whole prompt`. On TensorFold, the cache size
 is set with `--prompt-cache-gib` when the server starts.
 
 A server can name another as its **Fallback server**, for when the first is down or unreachable.
-M3 Code's gateway sends a request to the fallback only when the first server's last check did not
+ZZZ Code's gateway sends a request to the fallback only when the first server's last check did not
 find it ready, or connecting to it failed, and only if the fallback serves the same model. It is
 not for overflow: while the first server is up, requests wait in its queue even when the fallback
 is idle. A request that already started is never moved.
@@ -73,13 +73,13 @@ is idle. A request that already started is never moved.
 Then link a provider instance to a server with the **Inference server** setting on its card in
 **Settings → Providers**. A linked instance counts as local while its server is enabled, and the
 model picker shows the server's name and readiness next to the provider, such as `Pi · rtx ·
-Ready`. M3 Code also caps the context window it assumes for the instance at what the server
+Ready`. ZZZ Code also caps the context window it assumes for the instance at what the server
 actually serves. Changing the link, or a server's URL, key or enabled switch, applies to sessions
 that start afterwards; a running session stays on the server and URL it started with until it ends.
 
 ### Pi on a registered server
 
-A Pi instance linked to a server needs no `models.json` entry. M3 Code registers the server in Pi
+A Pi instance linked to a server needs no `models.json` entry. ZZZ Code registers the server in Pi
 as `t3-<server>` with every model the server reports, sized from what the server advertises, so
 pick a model such as `t3-rtx/your-model-id` in the model picker. These requests go through T3
 Code's gateway, which:
@@ -98,9 +98,9 @@ Code's gateway, which:
   server, add `"watchdog": { "enabled": false }` to that server under `inferenceServers` in `settings.json`.
 
 Pi and OpenCode pass your image attachments to a linked model unless it is known to read text
-only, as its engine (Ollama, LM Studio, llama.cpp) reports or M3 Code's check found. To check a
+only, as its engine (Ollama, LM Studio, llama.cpp) reports or ZZZ Code's check found. To check a
 model, press **Check images** next to it in **Settings → Inference**; attaching an image to a model
-nobody has checked starts the check on its own. M3 Code asks the model to name the colour of four
+nobody has checked starts the check on its own. ZZZ Code asks the model to name the colour of four
 test images, through the same queue as your threads, and marks it **Reads images** or **Text
 only**. A text-only result applies to sessions that start afterwards. A day later the button
 returns as **Check images again**, in case the server now runs different weights under the same
@@ -133,7 +133,7 @@ request starts slowly.
 | -------- | ----------------------------------------------------------------------------------- | ----------------------------------- |
 | Pi       | Pi's `~/.pi/agent/models.json`                                                      | OpenAI Chat Completions             |
 | OpenCode | OpenCode's `opencode.json`, or a link to a registered server                        | OpenAI Chat Completions             |
-| Claude   | The instance's **Environment variables** in M3 Code                                 | Anthropic Messages (`/v1/messages`) |
+| Claude   | The instance's **Environment variables** in ZZZ Code                                | Anthropic Messages (`/v1/messages`) |
 | Codex    | Codex's `config.toml`, with the instance's setup set to use your existing Codex CLI | OpenAI Responses (`/v1/responses`)  |
 
 Pi and OpenCode work with the widest range of servers. Use the model's exact ID
@@ -181,11 +181,11 @@ Add an OpenAI-compatible provider to `opencode.json`:
 }
 ```
 
-OpenCode's **Server URL** setting in M3 Code is for an OpenCode server, not your
+OpenCode's **Server URL** setting in ZZZ Code is for an OpenCode server, not your
 inference server. Leave it empty. See [OpenCode](./providers-opencode.md).
 
 To skip this file, register the server in **Settings → Inference** and link the OpenCode
-instance to it. M3 Code then adds the server to OpenCode as `t3-<server>` with every model it
+instance to it. ZZZ Code then adds the server to OpenCode as `t3-<server>` with every model it
 reports, sized from what the server advertises, and sends its requests through the gateway, like
 [Pi on a registered server](#pi-on-a-registered-server). Pick a model such as
 `t3-rtx/your-model-id`. Requests are counted per thread, except OpenCode's own title requests,
@@ -230,9 +230,9 @@ Codex's built-in Ollama or `lmstudio` providers. Use `-c` overrides rather than
 `--oss`: chat runs `codex app-server`, which accepts only `-c`.
 
 Linking a Codex instance to a registered server that serves the Responses API does this for you,
-and is **experimental**. M3 Code starts Codex with a `t3-<server>` provider that goes through the
+and is **experimental**. ZZZ Code starts Codex with a `t3-<server>` provider that goes through the
 gateway, the model picker offers only that server's models, and Codex's multi-agent and web search
-tools are turned off. Codex sends M3 Code's own tools as a tool group that some servers reject
+tools are turned off. Codex sends ZZZ Code's own tools as a tool group that some servers reject
 ("function tools only"); on such a server, threads fail until it accepts them. While the linked
 server is down or cannot serve the Responses API, the instance lists no models and its threads
 wait: Codex never falls back to your OpenAI login. Disable the server to use that login again.

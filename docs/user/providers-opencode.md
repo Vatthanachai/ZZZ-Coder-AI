@@ -2,18 +2,18 @@
 
 Install and authenticate OpenCode on the machine running your environment, then
 enable it in **Settings > Providers**. See [provider setup](./install.md#providers).
-M3 Code requires OpenCode 1.14.19 or newer, including when you connect an existing
+ZZZ Code requires OpenCode 1.14.19 or newer, including when you connect an existing
 OpenCode server.
 
 ## OpenCode 2
 
-M3 Code supports OpenCode 2.0.18 and newer. It detects the version on its own, so
+ZZZ Code supports OpenCode 2.0.18 and newer. It detects the version on its own, so
 the same provider settings work for OpenCode 1.x and 2.x. OpenCode 1.x shows
 **Limited support** in its provider settings.
 
 OpenCode 2 is a separate package, `@opencode/cli`. To move from 1.x, install it
 yourself, for example `npm install -g @opencode/cli`. Then refresh provider status.
-M3 Code's update button updates whichever package you have installed. It never
+ZZZ Code's update button updates whichever package you have installed. It never
 switches a 1.x install to 2.x.
 
 OpenCode 2 converts the shared OpenCode database to its own format the first time it
@@ -22,7 +22,7 @@ started on 1.x continue on 2.x.
 
 ## Compaction
 
-OpenCode compacts long conversations itself, and M3 Code has no setting for it. On
+OpenCode compacts long conversations itself, and ZZZ Code has no setting for it. On
 OpenCode 2, change it under `compaction` in an OpenCode configuration file, such as
 `opencode.json`: `auto` turns
 automatic compaction on or off, `buffer` sets the token headroom, and `keep.tokens`
@@ -31,40 +31,40 @@ Send `/compact` to compact a thread yourself.
 
 ## Local or external server
 
-Leave **Server URL** empty to let M3 Code start OpenCode locally. A password in
-provider settings applies to both that server and M3 Code's connection. With no
+Leave **Server URL** empty to let ZZZ Code start OpenCode locally. A password in
+provider settings applies to both that server and ZZZ Code's connection. With no
 password setting, the local server uses `OPENCODE_SERVER_PASSWORD` from its
 environment, and with neither T3 Code generates a password for it.
 
 To use an existing OpenCode server, set **Server URL** and its password in provider
-settings. M3 Code uses only that configured password for an external server; it
+settings. ZZZ Code uses only that configured password for an external server; it
 does not forward a local `OPENCODE_SERVER_PASSWORD`. If connection or version checks
 fail, check the URL, credentials, and OpenCode version, then refresh provider status.
 
 When **Server URL** points to a locally running server (such as `127.0.0.1`),
 the update button upgrades its installed CLI. If that server is this machine's
-OpenCode background service, M3 Code then restarts it on the new version. The URL
+OpenCode background service, ZZZ Code then restarts it on the new version. The URL
 must use the service's own protocol, host, and port. For a service listening on
 `0.0.0.0` use `127.0.0.1`, and for `[::]` use `[::1]`.
 
-Restarting interrupts running turns, and the service then runs with M3 Code's
+Restarting interrupts running turns, and the service then runs with ZZZ Code's
 environment. Set any variables it needs with `opencode service set env <name> <value>`.
 
-M3 Code does not restart any other server, including the background service
+ZZZ Code does not restart any other server, including the background service
 reached through `localhost`. That server can still report the previous version
-until you restart it. For a loopback URL, M3 Code shows that restart requirement
+until you restart it. For a loopback URL, ZZZ Code shows that restart requirement
 instead of treating the CLI update as a failure.
 
-M3 Code waits for a local server it started to recover after a lost connection.
+ZZZ Code waits for a local server it started to recover after a lost connection.
 You can stop the turn while it reconnects. If the server exits or an external
 connection cannot be restored, send another prompt to resume the same OpenCode
 session.
 
 ## Local models
 
-Link the instance to a server registered in **Settings → Inference** and M3 Code adds it to
-OpenCode as `t3-<server>` with the server's models, routed through M3 Code's gateway. This works
-only for an OpenCode server M3 Code starts, so leave **Server URL** empty. See
+Link the instance to a server registered in **Settings → Inference** and ZZZ Code adds it to
+OpenCode as `t3-<server>` with the server's models, routed through ZZZ Code's gateway. This works
+only for an OpenCode server ZZZ Code starts, so leave **Server URL** empty. See
 [Local models](./local-models.md#opencode).
 
 ## Approvals
@@ -90,10 +90,10 @@ Credential changes are read on refresh. Native OpenCode configuration can remain
 cached while the local helper is running. Let it sit for 30 seconds without model
 refreshes or text-generation work, then refresh again to reload the files. Repeated
 refreshes keep the helper alive. An external server may need its own reload or
-restart before M3 Code can see configuration changes.
+restart before ZZZ Code can see configuration changes.
 
 Models defined in a project's own `opencode.json` appear only in that project's
-model picker, after M3 Code reads the project's catalog the first time the picker
+model picker, after ZZZ Code reads the project's catalog the first time the picker
 opens there.
 
 Existing threads keep their selected model and options even when it disappears

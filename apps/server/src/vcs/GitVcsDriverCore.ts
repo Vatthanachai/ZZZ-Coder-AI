@@ -1830,7 +1830,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
     }
     const repository = yield* resolveRepositoryPaths(cwd);
     if (repository?.worktreeRoot == null) return null;
-    // The cached branch outlives a checkout made outside M3 Code, so it is read fresh.
+    // The cached branch outlives a checkout made outside ZZZ Code, so it is read fresh.
     const currentBranch = needsCurrentBranch
       ? yield* readCurrentBranch("GitVcsDriver.review.currentBranch", cwd)
       : null;
@@ -4304,13 +4304,14 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
   });
 
   const readEmptyTreeHash = Effect.fn("readEmptyTreeHash")(function* (cwd: string) {
-    const stdout = yield* runGitStdout("GitVcsDriver.review.emptyTree", cwd, [
-      "hash-object",
-      "-t",
-      "tree",
-      (yield* HostProcess.Platform) === "win32" ? "NUL" : "/dev/null",
-    ]);
-    return stdout.trim();
+    // Empty stdin, not a device path: Git prefixes `NUL` with the subdirectory on Windows.
+    const result = yield* executeGit(
+      "GitVcsDriver.review.emptyTree",
+      cwd,
+      ["hash-object", "-t", "tree", "--stdin"],
+      { stdin: "" },
+    );
+    return result.stdout.trim();
   });
 
   const prepareUntrackedReviewIndexOrReason = Effect.fn("prepareUntrackedReviewIndex")(function* (
@@ -5649,7 +5650,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
         };
       }
 
-      // Both caches outlive a checkout made outside M3 Code, so this checkout's branch is read
+      // Both caches outlive a checkout made outside ZZZ Code, so this checkout's branch is read
       // on every call and replaces whatever the cached snapshot claims for it.
       const [snapshot, currentBranch] = yield* Effect.all(
         [
@@ -5661,7 +5662,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
         { concurrency: 2 },
       );
       const { worktreeRoot } = repositoryPaths;
-      // The snapshot misses a branch created outside M3 Code until it refreshes. An unborn HEAD
+      // The snapshot misses a branch created outside ZZZ Code until it refreshes. An unborn HEAD
       // names a branch with no ref yet, so the ref must exist before it is listed.
       const currentBranchUnlisted =
         currentBranch !== null && !snapshot.localBranches.some((ref) => ref.name === currentBranch);

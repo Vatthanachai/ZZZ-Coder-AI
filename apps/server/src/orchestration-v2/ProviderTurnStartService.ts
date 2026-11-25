@@ -252,7 +252,7 @@ export const isProviderTurnStartRunStateMissingError = Schema.is(
 const RESUME_PROMPT = "Continue where you left off.";
 
 const START_GAVE_UP_MESSAGE =
-  "M3 Code could not start this turn. Send the message again; if it keeps failing, check the server logs.";
+  "ZZZ Code could not start this turn. Send the message again; if it keeps failing, check the server logs.";
 
 const startFailureMessage = (error: Error): string => {
   const nestedCause = "cause" in error ? error.cause : undefined;
@@ -321,7 +321,6 @@ export const layer: Layer.Layer<
     const providerSessions = yield* ProviderSessionManager.ProviderSessionManagerV2;
     const runExecution = yield* RunExecutionService.RunExecutionServiceV2;
     const runtimePolicy = yield* RuntimePolicy.RuntimePolicyV2;
-    const gitWorkflow = yield* GitWorkflowService.GitWorkflowService;
     const serverSettings = yield* ServerSettings.ServerSettingsService;
     // Optional so orchestration test runtimes need no probe layer; the server always provides it.
     const inferenceServers = yield* Effect.serviceOption(
@@ -567,7 +566,7 @@ export const layer: Layer.Layer<
             } satisfies OrchestrationV2DomainEvent;
           }),
         );
-        const written = yield* eventSink.writeIfRunCurrent({
+        yield* eventSink.writeIfRunCurrent({
           threadId: run.threadId,
           runId,
           activeAttemptId: attempt.id,

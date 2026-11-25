@@ -458,7 +458,7 @@ function ConfiguredSettingsNotificationsRouteScreen() {
 
     Dialog.alert(
       gt("Disable notifications"),
-      gt("Open system Settings to disable notifications for {product}.", { product: "M3 Code" }),
+      gt("Open system Settings to disable notifications for {product}.", { product: "ZZZ Code" }),
       [
         { text: gt("Cancel"), style: "cancel" },
         { text: gt("Open Settings"), onPress: () => void Linking.openSettings() },
@@ -619,7 +619,7 @@ function ConfiguredSettingsNotificationsRouteScreen() {
                     gt("Couldn't open Settings"),
                     gt(
                       "Open Android Settings, select {product}, then enable Live Updates in Notifications.",
-                      { product: "M3 Code" },
+                      { product: "ZZZ Code" },
                     ),
                   );
                 });

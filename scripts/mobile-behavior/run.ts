@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // @effect-diagnostics nodeBuiltinImport:off globalJsonInEffect:off - owns Metro and writes result files.
 /**
- * Drives the M3 Code iOS dev client on one simulator against an isolated server with scripted
+ * Drives the ZZZ Code iOS dev client on one simulator against an isolated server with scripted
  * replies, and grades app behavior from the dev-only probe and server state. See README.md.
  */
 import * as NodeChildProcess from "node:child_process";

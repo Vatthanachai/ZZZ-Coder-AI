@@ -53,6 +53,8 @@ vi.mock("node:fs", async (importOriginal) => {
   };
 });
 
+// systemd and launchd cases install into real temp dirs; a Windows temp path is not a valid unit path.
+const onWindowsHost = HostProcess.Platform.defaultValue() === "win32";
 const SCHTASKS = "D:\\WinNT\\System32\\schtasks.exe";
 
 const windowsTaskOptions = {
@@ -436,7 +438,7 @@ const makeHarness = Effect.fn("test.make_boot_service_harness")(function* (
 });
 
 it.layer(NodeServices.layer)("boot service install", (it) => {
-  it.effect(
+  it.effect.skipIf(onWindowsHost)(
     "marks immediate and deferred service restarts without blocking on a marker error",
     () =>
       Effect.gen(function* () {
@@ -473,7 +475,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       }),
   );
 
-  it.effect(
+  it.effect.skipIf(onWindowsHost)(
     "fails before installing files or validating a runtime when lingering needs an administrator",
     () =>
       Effect.gen(function* () {
@@ -503,7 +505,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       }),
   );
 
-  it.effect(
+  it.effect.skipIf(onWindowsHost)(
     "detects a partial install and preserves the running service when repair lacks permission",
     () =>
       Effect.gen(function* () {
@@ -528,47 +530,51 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       }),
   );
 
-  it.effect("enables lingering before installing and repairs stopped or disabled services", () =>
-    Effect.gen(function* () {
-      const { service, commands, control } = yield* makeHarness();
-      control.linger = "no";
-      yield* service.install();
-      expect(control.linger).toBe("yes");
-      expect(commands.indexOf("loginctl enable-linger --no-ask-password 501")).toBeLessThan(
-        commands.indexOf("systemctl --user daemon-reload"),
-      );
-
-      control.enabled = false;
-      control.active = false;
-      expect(yield* service.status).toMatchObject({
-        current: false,
-        problems: ["service-disabled", "service-stopped"],
-      });
-      yield* service.install();
-      expect((yield* service.status).current).toBe(true);
-    }),
-  );
-
-  // regression: #29881
-  it.effect.each([
-    { logind: "has lingering disabled", linger: "no" },
-    { logind: "does not know the user", linger: undefined },
-  ])(
-    "enables lingering to bring up an unreachable user manager when logind $logind",
-    ({ linger }) =>
+  it.effect.skipIf(onWindowsHost)(
+    "enables lingering before installing and repairs stopped or disabled services",
+    () =>
       Effect.gen(function* () {
         const { service, commands, control } = yield* makeHarness();
-        control.linger = linger;
-        control.managerReachable = false;
-
+        control.linger = "no";
         yield* service.install();
+        expect(control.linger).toBe("yes");
+        expect(commands.indexOf("loginctl enable-linger --no-ask-password 501")).toBeLessThan(
+          commands.indexOf("systemctl --user daemon-reload"),
+        );
 
-        expect(commands).toContain("loginctl enable-linger --no-ask-password 501");
+        control.enabled = false;
+        control.active = false;
+        expect(yield* service.status).toMatchObject({
+          current: false,
+          problems: ["service-disabled", "service-stopped"],
+        });
+        yield* service.install();
         expect((yield* service.status).current).toBe(true);
       }),
   );
 
-  it.effect("does not reach a running root user manager under sudo", () =>
+  // regression: #29881
+  it.effect.each(
+    onWindowsHost
+      ? []
+      : [
+          { logind: "has lingering disabled", linger: "no" },
+          { logind: "does not know the user", linger: undefined },
+        ],
+  )("enables lingering to bring up an unreachable user manager when logind $logind", ({ linger }) =>
+    Effect.gen(function* () {
+      const { service, commands, control } = yield* makeHarness();
+      control.linger = linger;
+      control.managerReachable = false;
+
+      yield* service.install();
+
+      expect(commands).toContain("loginctl enable-linger --no-ask-password 501");
+      expect((yield* service.status).current).toBe(true);
+    }),
+  );
+
+  it.effect.skipIf(onWindowsHost)("does not reach a running root user manager under sudo", () =>
     Effect.gen(function* () {
       const { makeService, commands, control } = yield* makeHarness();
       control.busNeedsRuntimeDir = true;
@@ -582,7 +588,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
     }),
   );
 
-  it.effect("does not enable lingering for root under sudo", () =>
+  it.effect.skipIf(onWindowsHost)("does not enable lingering for root under sudo", () =>
     Effect.gen(function* () {
       const { makeService, commands, control } = yield* makeHarness();
       control.linger = undefined;
@@ -598,34 +604,40 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
   );
 
   // regression: #29881
-  it.effect("installs into the unit directory of the user manager that lingering starts", () =>
-    Effect.gen(function* () {
-      const path = yield* Path.Path;
-      const fs = yield* FileSystem.FileSystem;
-      const shellConfigHome = yield* fs.makeTempDirectoryScoped({ prefix: "t3-xdg-config-" });
-      const { makeService, home, control } = yield* makeHarness(
-        "linux",
-        undefined,
-        shellConfigHome,
-        "",
-      );
-      control.linger = "no";
-      control.managerReachable = false;
-      const service = yield* makeService();
+  it.effect.skipIf(onWindowsHost)(
+    "installs into the unit directory of the user manager that lingering starts",
+    () =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const fs = yield* FileSystem.FileSystem;
+        const shellConfigHome = yield* fs.makeTempDirectoryScoped({ prefix: "t3-xdg-config-" });
+        const { makeService, home, control } = yield* makeHarness(
+          "linux",
+          undefined,
+          shellConfigHome,
+          "",
+        );
+        control.linger = "no";
+        control.managerReachable = false;
+        const service = yield* makeService();
 
-      const plan = yield* service.install();
+        const plan = yield* service.install();
 
-      const unitPath = path.join(home, ".config", "systemd", "user", "t3code.service");
-      expect(plan.unitPath).toBe(unitPath);
-      expect(yield* service.status).toMatchObject({ current: true, unitPath });
-    }),
+        const unitPath = path.join(home, ".config", "systemd", "user", "t3code.service");
+        expect(plan.unitPath).toBe(unitPath);
+        expect(yield* service.status).toMatchObject({ current: true, unitPath });
+      }),
   );
 
   // regression: #29881
-  it.effect.each([
-    { manager: "starts after three probes", upAfterPauses: 3, pauses: 3 },
-    { manager: "never starts", upAfterPauses: undefined, pauses: 10 },
-  ])(
+  it.effect.each(
+    onWindowsHost
+      ? []
+      : [
+          { manager: "starts after three probes", upAfterPauses: 3, pauses: 3 },
+          { manager: "never starts", upAfterPauses: undefined, pauses: 10 },
+        ],
+  )(
     "waits a bounded time for the user manager lingering starts when it $manager",
     ({ upAfterPauses, pauses }) =>
       Effect.gen(function* () {
@@ -664,29 +676,38 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
   );
 
   // regression: #29881
-  it.effect("points systemd user commands at the user's runtime directory when none is set", () =>
-    Effect.gen(function* () {
-      const { service, invocations, makeService } = yield* makeHarness();
-      yield* service.install();
-      const inside = yield* makeService(undefined, "1.2.4", undefined, true);
-      yield* inside.install({ allowDowngrade: true });
+  it.effect.skipIf(onWindowsHost)(
+    "points systemd user commands at the user's runtime directory when none is set",
+    () =>
+      Effect.gen(function* () {
+        const { service, invocations, makeService } = yield* makeHarness();
+        yield* service.install();
+        const inside = yield* makeService(undefined, "1.2.4", undefined, true);
+        yield* inside.install({ allowDowngrade: true });
 
-      const systemdCalls = invocations.filter(({ command }) =>
-        ["systemctl", "busctl", "systemd-run", "loginctl"].includes(command),
-      );
-      expect(new Set(systemdCalls.map(({ command }) => command)).size).toBe(4);
-      expect(
-        systemdCalls
-          .filter(({ env }) => env?.XDG_RUNTIME_DIR !== "/run/user/501")
-          .map(({ command, args }) => `${command} ${args.join(" ")}`),
-      ).toEqual([]);
-    }),
+        const systemdCalls = invocations.filter(({ command }) =>
+          ["systemctl", "busctl", "systemd-run", "loginctl"].includes(command),
+        );
+        expect(new Set(systemdCalls.map(({ command }) => command)).size).toBe(4);
+        expect(
+          systemdCalls
+            .filter(({ env }) => env?.XDG_RUNTIME_DIR !== "/run/user/501")
+            .map(({ command, args }) => `${command} ${args.join(" ")}`),
+        ).toEqual([]);
+      }),
   );
 
-  it.effect.each([
-    { command: "systemctl --user show-environment", problem: "user-manager-unavailable" },
-    { command: "loginctl show-user 501 --property=Linger --value", problem: "linger-unavailable" },
-  ])("reports failed prerequisite probes without installing: $command", ({ command, problem }) =>
+  it.effect.each(
+    onWindowsHost
+      ? []
+      : [
+          { command: "systemctl --user show-environment", problem: "user-manager-unavailable" },
+          {
+            command: "loginctl show-user 501 --property=Linger --value",
+            problem: "linger-unavailable",
+          },
+        ],
+  )("reports failed prerequisite probes without installing: $command", ({ command, problem }) =>
     Effect.gen(function* () {
       const { service, fs, statePath, control } = yield* makeHarness();
       control.failCommand = command;
@@ -698,7 +719,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
     }),
   );
 
-  it.effect.each(["linux", "darwin"] as const)(
+  it.effect.each(onWindowsHost ? [] : (["linux", "darwin"] as const))(
     "preserves the custom install bin directory in the installed service on %s",
     (platform) =>
       Effect.gen(function* () {
@@ -761,15 +782,19 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       }),
   );
 
-  it.effect.each([
-    "unset",
-    "empty",
-    "relative",
-    "relocated",
-    "shell-only",
-    "manager-only",
-    "manager-unavailable",
-  ] as const)("installs, discovers, restarts, and uninstalls with $XDG_CONFIG_HOME %s", (setting) =>
+  it.effect.each(
+    onWindowsHost
+      ? []
+      : ([
+          "unset",
+          "empty",
+          "relative",
+          "relocated",
+          "shell-only",
+          "manager-only",
+          "manager-unavailable",
+        ] as const),
+  )("installs, discovers, restarts, and uninstalls with $XDG_CONFIG_HOME %s", (setting) =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
       const fs = yield* FileSystem.FileSystem;
@@ -850,7 +875,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
     }),
   );
 
-  it.effect.each(["linux", "darwin"] as const)(
+  it.effect.each(onWindowsHost ? [] : (["linux", "darwin"] as const))(
     "reports the installed version across launcher protocols on %s",
     (platform) =>
       Effect.gen(function* () {
@@ -876,7 +901,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
   );
 
   // regression: #5302 prevent accidental service downgrades
-  it.effect("reports an unknown version for invalid service state", () =>
+  it.effect.skipIf(onWindowsHost)("reports an unknown version for invalid service state", () =>
     Effect.gen(function* () {
       const { service, fs, statePath } = yield* makeHarness();
       yield* service.install();
@@ -895,7 +920,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
     }),
   );
 
-  it.effect.each(["linux", "darwin"] as const)(
+  it.effect.each(onWindowsHost ? [] : (["linux", "darwin"] as const))(
     "preserves a newer version that finishes updating during stop on %s",
     (platform) =>
       Effect.gen(function* () {
@@ -936,7 +961,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
   );
 
   // regression: #5302 prevent accidental service downgrades
-  it.effect("allows an explicit downgrade", () =>
+  it.effect.skipIf(onWindowsHost)("allows an explicit downgrade", () =>
     Effect.gen(function* () {
       const { service, fs, statePath } = yield* makeHarness();
       yield* service.install();
@@ -952,22 +977,24 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
     }),
   );
 
-  it.effect("repairs versions with equal SemVer precedence without an override", () =>
-    Effect.gen(function* () {
-      const { service, fs, statePath } = yield* makeHarness();
-      yield* service.install();
-      yield* fs.writeFileString(
-        statePath,
-        `{"protocol":${SERVICE_LAUNCHER_PROTOCOL},"activeVersion":"1.2.3+previous-build"}`,
-      );
+  it.effect.skipIf(onWindowsHost)(
+    "repairs versions with equal SemVer precedence without an override",
+    () =>
+      Effect.gen(function* () {
+        const { service, fs, statePath } = yield* makeHarness();
+        yield* service.install();
+        yield* fs.writeFileString(
+          statePath,
+          `{"protocol":${SERVICE_LAUNCHER_PROTOCOL},"activeVersion":"1.2.3+previous-build"}`,
+        );
 
-      yield* service.install();
+        yield* service.install();
 
-      expect((yield* service.status).current).toBe(true);
-    }),
+        expect((yield* service.status).current).toBe(true);
+      }),
   );
 
-  it.effect.each(["linux", "darwin"] as const)(
+  it.effect.each(onWindowsHost ? [] : (["linux", "darwin"] as const))(
     "install with start=false rewrites files, preserves service.env, and marks a restart pending on %s",
     (platform) =>
       Effect.gen(function* () {
@@ -1023,7 +1050,7 @@ it.layer(NodeServices.layer)("boot service install", (it) => {
       }),
   );
 
-  it.effect(
+  it.effect.skipIf(onWindowsHost)(
     "serializes a local install with another process reconciling an older unit snapshot",
     () =>
       Effect.gen(function* () {
@@ -1173,145 +1200,153 @@ process.disconnect();
       }),
   );
 
-  it.effect("install with start=false keeps the marker when a later write fails", () =>
-    Effect.gen(function* () {
-      const { service, fs, statePath, makeService } = yield* makeHarness();
-      const path = yield* Path.Path;
-      yield* service.install();
-      const newer = yield* makeService(undefined, "1.2.4");
-      const unitPath = (yield* service.status).unitPath;
-      yield* fs.remove(unitPath);
-      yield* fs.makeDirectory(unitPath);
-      yield* fs.writeFileString(path.join(unitPath, "occupied"), "");
+  it.effect.skipIf(onWindowsHost)(
+    "install with start=false keeps the marker when a later write fails",
+    () =>
+      Effect.gen(function* () {
+        const { service, fs, statePath, makeService } = yield* makeHarness();
+        const path = yield* Path.Path;
+        yield* service.install();
+        const newer = yield* makeService(undefined, "1.2.4");
+        const unitPath = (yield* service.status).unitPath;
+        yield* fs.remove(unitPath);
+        yield* fs.makeDirectory(unitPath);
+        yield* fs.writeFileString(path.join(unitPath, "occupied"), "");
 
-      const error = yield* newer.install({ start: false }).pipe(Effect.flip);
-      expect(error._tag).toBe("BootServiceInstallError");
-      expect(
-        yield* fs.exists(path.join(path.dirname(statePath), SERVICE_RESTART_PENDING_FILE)),
-      ).toBe(true);
-    }),
+        const error = yield* newer.install({ start: false }).pipe(Effect.flip);
+        expect(error._tag).toBe("BootServiceInstallError");
+        expect(
+          yield* fs.exists(path.join(path.dirname(statePath), SERVICE_RESTART_PENDING_FILE)),
+        ).toBe(true);
+      }),
   );
 
-  it.effect("install with start=false refuses while a remote update is pending", () =>
-    Effect.gen(function* () {
-      const { service, fs, statePath } = yield* makeHarness();
-      yield* service.install();
-      const pendingState = JSON.stringify({
-        protocol: SERVICE_LAUNCHER_PROTOCOL,
-        activeVersion: "1.2.3",
-        update: {
-          id: "u",
-          fromVersion: "1.2.3",
-          targetVersion: "1.2.4",
-          dbPath: "/tmp/state.sqlite",
-          status: "pending",
-        },
-      });
-      yield* fs.writeFileString(statePath, pendingState);
+  it.effect.skipIf(onWindowsHost)(
+    "install with start=false refuses while a remote update is pending",
+    () =>
+      Effect.gen(function* () {
+        const { service, fs, statePath } = yield* makeHarness();
+        yield* service.install();
+        const pendingState = JSON.stringify({
+          protocol: SERVICE_LAUNCHER_PROTOCOL,
+          activeVersion: "1.2.3",
+          update: {
+            id: "u",
+            fromVersion: "1.2.3",
+            targetVersion: "1.2.4",
+            dbPath: "/tmp/state.sqlite",
+            status: "pending",
+          },
+        });
+        yield* fs.writeFileString(statePath, pendingState);
 
-      const error = yield* service.install({ start: false }).pipe(Effect.flip);
-      expect(error._tag).toBe("BootServiceUpdatePendingError");
-      expect(yield* fs.readFileString(statePath)).toBe(pendingState);
-      yield* fs.remove((yield* service.status).unitPath);
-      expect((yield* service.install({ start: false }).pipe(Effect.flip))._tag).toBe(
-        "BootServiceUpdatePendingError",
-      );
-      expect(yield* fs.readFileString(statePath)).toBe(pendingState);
-    }),
+        const error = yield* service.install({ start: false }).pipe(Effect.flip);
+        expect(error._tag).toBe("BootServiceUpdatePendingError");
+        expect(yield* fs.readFileString(statePath)).toBe(pendingState);
+        yield* fs.remove((yield* service.status).unitPath);
+        expect((yield* service.install({ start: false }).pipe(Effect.flip))._tag).toBe(
+          "BootServiceUpdatePendingError",
+        );
+        expect(yield* fs.readFileString(statePath)).toBe(pendingState);
+      }),
   );
 
-  it.effect("pauses only this home's running service for maintenance, even when it fails", () =>
-    Effect.gen(function* () {
-      const { service, commands, control, makeService, markersAtStop } = yield* makeHarness();
-      yield* service.install();
-      const failure = yield* service
-        .withStopped(Effect.failSync(() => (control.active ? "running" : "repair failed")))
-        .pipe(Effect.flip);
-      expect(failure).toBe("repair failed");
-      expect(markersAtStop).toEqual([false]);
-      expect(control.active).toBe(true);
+  it.effect.skipIf(onWindowsHost)(
+    "pauses only this home's running service for maintenance, even when it fails",
+    () =>
+      Effect.gen(function* () {
+        const { service, commands, control, makeService, markersAtStop } = yield* makeHarness();
+        yield* service.install();
+        const failure = yield* service
+          .withStopped(Effect.failSync(() => (control.active ? "running" : "repair failed")))
+          .pipe(Effect.flip);
+        expect(failure).toBe("repair failed");
+        expect(markersAtStop).toEqual([false]);
+        expect(control.active).toBe(true);
 
-      control.failCommand = "systemctl --user stop t3code.service";
-      let ran = false;
-      const stopFailure = yield* service
-        .withStopped(
-          Effect.sync(() => {
-            ran = true;
-          }),
-        )
-        .pipe(Effect.flip);
-      expect(stopFailure).toMatchObject({
-        _tag: "BootServiceCommandError",
-        step: "stopping the installed service",
-      });
-      expect(ran).toBe(false);
-      expect(control.active).toBe(true);
-      control.failCommand = undefined;
+        control.failCommand = "systemctl --user stop t3code.service";
+        let ran = false;
+        const stopFailure = yield* service
+          .withStopped(
+            Effect.sync(() => {
+              ran = true;
+            }),
+          )
+          .pipe(Effect.flip);
+        expect(stopFailure).toMatchObject({
+          _tag: "BootServiceCommandError",
+          step: "stopping the installed service",
+        });
+        expect(ran).toBe(false);
+        expect(control.active).toBe(true);
+        control.failCommand = undefined;
 
-      control.active = false;
-      commands.length = 0;
-      yield* service.withStopped(Effect.sync(() => commands.push("repair")));
-      expect(commands).toEqual([
-        "systemctl --user is-enabled t3code.service",
-        "systemctl --user is-active t3code.service",
-        "systemctl --user stop t3code.service",
-        "repair",
-        "systemctl --user reset-failed t3code.service",
-        "systemctl --user restart t3code.service",
-      ]);
-      expect(control.active).toBe(true);
-      control.enabled = false;
-      yield* service.withStopped(Effect.void);
-      expect(control).toMatchObject({ active: true, enabled: false });
-      control.active = false;
-      control.enabled = false;
-      commands.length = 0;
-      yield* service.withStopped(Effect.sync(() => commands.push("repair")));
-      expect(commands).toContain("systemctl --user stop t3code.service");
-      expect(commands).not.toContain("systemctl --user restart t3code.service");
-      expect(control.active).toBe(false);
-      control.enabled = true;
-      control.active = true;
+        control.active = false;
+        commands.length = 0;
+        yield* service.withStopped(Effect.sync(() => commands.push("repair")));
+        expect(commands).toEqual([
+          "systemctl --user is-enabled t3code.service",
+          "systemctl --user is-active t3code.service",
+          "systemctl --user stop t3code.service",
+          "repair",
+          "systemctl --user reset-failed t3code.service",
+          "systemctl --user restart t3code.service",
+        ]);
+        expect(control.active).toBe(true);
+        control.enabled = false;
+        yield* service.withStopped(Effect.void);
+        expect(control).toMatchObject({ active: true, enabled: false });
+        control.active = false;
+        control.enabled = false;
+        commands.length = 0;
+        yield* service.withStopped(Effect.sync(() => commands.push("repair")));
+        expect(commands).toContain("systemctl --user stop t3code.service");
+        expect(commands).not.toContain("systemctl --user restart t3code.service");
+        expect(control.active).toBe(false);
+        control.enabled = true;
+        control.active = true;
 
-      const fs = yield* FileSystem.FileSystem;
-      const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "t3-doctor-other-" });
-      const other = yield* makeService(undefined, "1.2.3", otherHome);
-      commands.length = 0;
-      expect(yield* other.withStopped(Effect.sync(() => control.active))).toBe(true);
-      expect(commands).toEqual([]);
-    }),
+        const fs = yield* FileSystem.FileSystem;
+        const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "t3-doctor-other-" });
+        const other = yield* makeService(undefined, "1.2.3", otherHome);
+        commands.length = 0;
+        expect(yield* other.withStopped(Effect.sync(() => control.active))).toBe(true);
+        expect(commands).toEqual([]);
+      }),
   );
 
-  it.effect("restart and install leave a service that serves another T3 home alone", () =>
-    Effect.gen(function* () {
-      const { service, fs, baseDir, commands, makeService } = yield* makeHarness();
-      const plan = yield* service.install();
-      const unit = yield* fs.readFileString(plan.unitPath);
-      const path = yield* Path.Path;
-      const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "t3-other-home-" });
+  it.effect.skipIf(onWindowsHost)(
+    "restart and install leave a service that serves another T3 home alone",
+    () =>
+      Effect.gen(function* () {
+        const { service, fs, baseDir, commands, makeService } = yield* makeHarness();
+        const plan = yield* service.install();
+        const unit = yield* fs.readFileString(plan.unitPath);
+        const path = yield* Path.Path;
+        const otherHome = yield* fs.makeTempDirectoryScoped({ prefix: "t3-other-home-" });
 
-      const other = yield* makeService(undefined, "1.2.3", path.join(otherHome, ".t3"));
-      commands.length = 0;
-      expect(yield* other.restart).toBe("skipped");
-      const refused = yield* other.install().pipe(Effect.flip);
-      expect(refused._tag).toBe("BootServiceOtherBaseDirError");
-      // The CLI prints a user message without a stack trace.
-      expect(CliError.getUserMessage(refused)).toBe(refused.message);
-      expect(yield* fs.readFileString(plan.unitPath)).toBe(unit);
-      expect(commands).toEqual([]);
-      expect((yield* other.status).otherBaseDir).toBe(baseDir);
+        const other = yield* makeService(undefined, "1.2.3", path.join(otherHome, ".t3"));
+        commands.length = 0;
+        expect(yield* other.restart).toBe("skipped");
+        const refused = yield* other.install().pipe(Effect.flip);
+        expect(refused._tag).toBe("BootServiceOtherBaseDirError");
+        // The CLI prints a user message without a stack trace.
+        expect(CliError.getUserMessage(refused)).toBe(refused.message);
+        expect(yield* fs.readFileString(plan.unitPath)).toBe(unit);
+        expect(commands).toEqual([]);
+        expect((yield* other.status).otherBaseDir).toBe(baseDir);
 
-      const quoted = yield* makeService(undefined, "1.2.3", path.join(otherHome, 'T3 "Data"'));
-      commands.length = 0;
-      const unloadable = yield* quoted.install().pipe(Effect.flip);
-      expect(unloadable._tag).toBe("BootServiceBaseDirUnsupportedError");
-      expect(CliError.getUserMessage(unloadable)).toBe(unloadable.message);
-      expect(yield* fs.readFileString(plan.unitPath)).toBe(unit);
-      expect(commands).toEqual([]);
-    }),
+        const quoted = yield* makeService(undefined, "1.2.3", path.join(otherHome, 'T3 "Data"'));
+        commands.length = 0;
+        const unloadable = yield* quoted.install().pipe(Effect.flip);
+        expect(unloadable._tag).toBe("BootServiceBaseDirUnsupportedError");
+        expect(CliError.getUserMessage(unloadable)).toBe(unloadable.message);
+        expect(yield* fs.readFileString(plan.unitPath)).toBe(unit);
+        expect(commands).toEqual([]);
+      }),
   );
 
-  it.effect("treats a symlinked T3 home path as the same home", () =>
+  it.effect.skipIf(onWindowsHost)("treats a symlinked T3 home path as the same home", () =>
     Effect.gen(function* () {
       const { service, fs, baseDir, commands, makeService } = yield* makeHarness();
       yield* service.install();
@@ -1333,56 +1368,58 @@ process.disconnect();
     }),
   );
 
-  it.effect("hands the whole install to systemd without changing the running service", () =>
-    Effect.gen(function* () {
-      const { fs, commands, invocations, control, makeService } = yield* makeHarness();
-      const path = yield* Path.Path;
-      const home = yield* fs.makeTempDirectoryScoped({ prefix: "t3-handoff-" });
-      const baseDir = path.join(home, "T3 Data 100%", "${UNSET}", "$literal");
-      const outside = yield* makeService(undefined, "1.2.3", baseDir);
-      const plan = yield* outside.install();
-      const statePath = path.join(baseDir, "runtime", "service-state.json");
-      const state = yield* fs.readFileString(statePath);
-      const unit = yield* fs.readFileString(plan.unitPath);
-      const inside = yield* makeService(undefined, "1.2.4", baseDir, true);
-      commands.length = 0;
-      invocations.length = 0;
+  it.effect.skipIf(onWindowsHost)(
+    "hands the whole install to systemd without changing the running service",
+    () =>
+      Effect.gen(function* () {
+        const { fs, commands, invocations, control, makeService } = yield* makeHarness();
+        const path = yield* Path.Path;
+        const home = yield* fs.makeTempDirectoryScoped({ prefix: "t3-handoff-" });
+        const baseDir = path.join(home, "T3 Data 100%", "${UNSET}", "$literal");
+        const outside = yield* makeService(undefined, "1.2.3", baseDir);
+        const plan = yield* outside.install();
+        const statePath = path.join(baseDir, "runtime", "service-state.json");
+        const state = yield* fs.readFileString(statePath);
+        const unit = yield* fs.readFileString(plan.unitPath);
+        const inside = yield* makeService(undefined, "1.2.4", baseDir, true);
+        commands.length = 0;
+        invocations.length = 0;
 
-      const result = yield* inside.install({ allowDowngrade: true });
+        const result = yield* inside.install({ allowDowngrade: true });
 
-      expect(yield* fs.readFileString(statePath)).toBe(state);
-      expect(yield* fs.readFileString(plan.unitPath)).toBe(unit);
-      expect(commands).not.toContain("systemctl --user stop t3code.service");
-      expect(result).toMatchObject({ handedOff: true, logPath: plan.logPath });
-      const handoffs = invocations.filter(({ command }) => command === "systemd-run");
-      expect(handoffs).toHaveLength(1);
-      expect(handoffs[0]?.args).toEqual([
-        "--user",
-        "--collect",
-        "--quiet",
-        `--property=StandardOutput=append:${plan.logPath}`,
-        `--property=StandardError=append:${plan.logPath}`,
-        "--setenv=T3_BOOT_SERVICE_UNIT=",
-        pinnedRuntimePaths(path, baseDir, "1.2.4", "linux").entryPath,
-        "service",
-        "install",
-        "--base-dir",
-        path.join(home, "T3 Data 100%", "$${UNSET}", "$$literal"),
-        "--allow-downgrade",
-      ]);
+        expect(yield* fs.readFileString(statePath)).toBe(state);
+        expect(yield* fs.readFileString(plan.unitPath)).toBe(unit);
+        expect(commands).not.toContain("systemctl --user stop t3code.service");
+        expect(result).toMatchObject({ handedOff: true, logPath: plan.logPath });
+        const handoffs = invocations.filter(({ command }) => command === "systemd-run");
+        expect(handoffs).toHaveLength(1);
+        expect(handoffs[0]?.args).toEqual([
+          "--user",
+          "--collect",
+          "--quiet",
+          `--property=StandardOutput=append:${plan.logPath}`,
+          `--property=StandardError=append:${plan.logPath}`,
+          "--setenv=T3_BOOT_SERVICE_UNIT=",
+          pinnedRuntimePaths(path, baseDir, "1.2.4", "linux").entryPath,
+          "service",
+          "install",
+          "--base-dir",
+          path.join(home, "T3 Data 100%", "$${UNSET}", "$$literal"),
+          "--allow-downgrade",
+        ]);
 
-      const handoff = handoffs[0]!;
-      control.failCommand = `${handoff.command} ${handoff.args.join(" ")}`;
-      const error = yield* inside.install({ allowDowngrade: true }).pipe(Effect.flip);
-      expect(error).toMatchObject({ _tag: "BootServiceCommandError", exitCode: 1 });
-      expect(yield* fs.readFileString(statePath)).toBe(state);
-      expect(yield* fs.readFileString(plan.unitPath)).toBe(unit);
-      expect(control.active).toBe(true);
-      expect(commands).not.toContain("systemctl --user stop t3code.service");
-    }),
+        const handoff = handoffs[0]!;
+        control.failCommand = `${handoff.command} ${handoff.args.join(" ")}`;
+        const error = yield* inside.install({ allowDowngrade: true }).pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "BootServiceCommandError", exitCode: 1 });
+        expect(yield* fs.readFileString(statePath)).toBe(state);
+        expect(yield* fs.readFileString(plan.unitPath)).toBe(unit);
+        expect(control.active).toBe(true);
+        expect(commands).not.toContain("systemctl --user stop t3code.service");
+      }),
   );
 
-  it.effect(
+  it.effect.skipIf(onWindowsHost)(
     "queues an in-service restart without stopping the caller, even on handoff failure",
     () =>
       Effect.gen(function* () {
@@ -1447,25 +1484,27 @@ process.disconnect();
   );
 
   // regression: #36319
-  it.effect("starts a service whose systemd start limit tripped after repairing it", () =>
-    Effect.gen(function* () {
-      const { service, control, makeService } = yield* makeHarness();
-      yield* service.install();
-      control.active = false;
-      control.startLimitHit = true;
+  it.effect.skipIf(onWindowsHost)(
+    "starts a service whose systemd start limit tripped after repairing it",
+    () =>
+      Effect.gen(function* () {
+        const { service, control, makeService } = yield* makeHarness();
+        yield* service.install();
+        control.active = false;
+        control.startLimitHit = true;
 
-      yield* service.install();
-      expect(control.active).toBe(true);
+        yield* service.install();
+        expect(control.active).toBe(true);
 
-      control.active = false;
-      control.startLimitHit = true;
-      const inside = yield* makeService(undefined, "1.2.3", undefined, true);
-      expect(yield* inside.restart).toBe("queued");
-      expect(control.active).toBe(true);
-    }),
+        control.active = false;
+        control.startLimitHit = true;
+        const inside = yield* makeService(undefined, "1.2.3", undefined, true);
+        expect(yield* inside.restart).toBe("queued");
+        expect(control.active).toBe(true);
+      }),
   );
 
-  it.effect("restarts an installed service when repair fails", () =>
+  it.effect.skipIf(onWindowsHost)("restarts an installed service when repair fails", () =>
     Effect.gen(function* () {
       const { service, commands, control } = yield* makeHarness();
       yield* service.install();
@@ -1487,7 +1526,7 @@ process.disconnect();
     }),
   );
 
-  it.effect("restarts without overwriting a pending remote update", () =>
+  it.effect.skipIf(onWindowsHost)("restarts without overwriting a pending remote update", () =>
     Effect.gen(function* () {
       const { service, fs, statePath, commands } = yield* makeHarness();
       yield* service.install();
@@ -1740,26 +1779,28 @@ process.disconnect();
   );
 
   // regression: #17532
-  it.effect("puts the runtime an update installs on the launch agent PATH", () =>
-    Effect.gen(function* () {
-      const { makeService, fs, baseDir, runtime } = yield* makeHarness("darwin");
-      const path = yield* Path.Path;
-      const previous = runtime.versionDir;
-      const installed = pinnedRuntimePaths(path, baseDir, "1.2.4", "darwin").versionDir;
-      // The 1.2.3 CLI, or the 1.2.3 service's own PATH, installs 1.2.4.
-      const updated = yield* makeService(
-        `/usr/bin:${previous}:/bin`,
-        "1.2.4",
-        undefined,
-        false,
-        runtime.entryPath,
-      );
-      const plan = yield* updated.install();
+  it.effect.skipIf(onWindowsHost)(
+    "puts the runtime an update installs on the launch agent PATH",
+    () =>
+      Effect.gen(function* () {
+        const { makeService, fs, baseDir, runtime } = yield* makeHarness("darwin");
+        const path = yield* Path.Path;
+        const previous = runtime.versionDir;
+        const installed = pinnedRuntimePaths(path, baseDir, "1.2.4", "darwin").versionDir;
+        // The 1.2.3 CLI, or the 1.2.3 service's own PATH, installs 1.2.4.
+        const updated = yield* makeService(
+          `/usr/bin:${previous}:/bin`,
+          "1.2.4",
+          undefined,
+          false,
+          runtime.entryPath,
+        );
+        const plan = yield* updated.install();
 
-      expect(yield* fs.readFileString(plan.unitPath)).toContain(
-        `    <key>PATH</key>\n    <string>/usr/bin:${installed}:/bin:/opt/homebrew/bin:/usr/local/bin:/usr/sbin:/sbin</string>`,
-      );
-    }),
+        expect(yield* fs.readFileString(plan.unitPath)).toContain(
+          `    <key>PATH</key>\n    <string>/usr/bin:${installed}:/bin:/opt/homebrew/bin:/usr/local/bin:/usr/sbin:/sbin</string>`,
+        );
+      }),
   );
 
   it.effect("drops PATH directories that cannot be represented in a launch agent plist", () =>

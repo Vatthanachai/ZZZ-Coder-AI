@@ -116,7 +116,7 @@ it.effect("an OpenCode process holds an instance credential; a thread process us
 it("the status says what T3 manages, or why not", () => {
   expect(openCodeGatewayStatusNote(undefined, false)).toBeUndefined();
   expect(openCodeGatewayStatusNote({ managed: true, server }, false)).toBe(
-    "M3 Code manages t3-rtx with 2 models.",
+    "ZZZ Code manages t3-rtx with 2 models.",
   );
   expect(openCodeGatewayStatusNote({ managed: false, reason: "No Chat API." }, false)).toBe(
     "No Chat API. OpenCode runs unmanaged.",

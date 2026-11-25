@@ -1,12 +1,12 @@
-# Running M3 Code in the background
+# Running ZZZ Code in the background
 
-On Linux, macOS, and Windows, M3 Code can run as a service for your user so you
+On Linux, macOS, and Windows, ZZZ Code can run as a service for your user so you
 do not need to keep a terminal open.
 
 ## Manage the service
 
-Install the `t3` CLI first ([Install M3 Code](./install.md#command-line)), then
-run these commands on the machine that will host M3 Code:
+Install the `t3` CLI first ([Install ZZZ Code](./install.md#command-line)), then
+run these commands on the machine that will host ZZZ Code:
 
 | Task                                  | Command                |
 | ------------------------------------- | ---------------------- |
@@ -29,7 +29,7 @@ the old version until you run `t3 service restart`. Pass `--yes` from a
 script. A server you started by hand is left running; stop and start it again
 to pick up the new version. Wait for any remote update already in progress
 before updating; to match a remote client's version, follow
-[Updating M3 Code](./updating.md).
+[Updating ZZZ Code](./updating.md).
 
 Pass an exact version (`t3 update 0.0.42`) to pin one, `--channel nightly` to
 switch trains, or `--allow-downgrade` to move backwards. `preview` is a
@@ -83,7 +83,7 @@ If the file contains credentials, restrict access to that file with `chmod 600`
 
 ## Platform support
 
-Linux needs systemd user services. Setup enables lingering so M3 Code starts at
+Linux needs systemd user services. Setup enables lingering so ZZZ Code starts at
 boot and keeps running after logout. If this needs administrator permission,
 setup prints a recovery command before changing the service.
 
@@ -140,7 +140,7 @@ ssh -t your-server 'sudo loginctl enable-linger "$(id -un)"'
 ```
 
 Then retry service setup as your normal user. Run only the `loginctl` command
-with sudo; running M3 Code as root creates a separate installation and Connect
+with sudo; running ZZZ Code as root creates a separate installation and Connect
 identity. Without administrator access, run `t3 serve` in a terminal and keep
 that session open.
 
@@ -148,7 +148,7 @@ that session open.
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `linger-unavailable`                    | Run `loginctl show-user "$(id -un)" --property=Linger` and check that systemd-logind is available.                             |
 | `user-manager-unavailable`              | Run `systemctl --user status` in a login session for the service user; check your distribution's systemd user-session support. |
-| `service-disabled` or `service-stopped` | Read the log and, on Linux, `systemctl --user status t3code.service`, then use the repair command printed by M3 Code.          |
+| `service-disabled` or `service-stopped` | Read the log and, on Linux, `systemctl --user status t3code.service`, then use the repair command printed by ZZZ Code.         |
 | `restart-pending`                       | A newer version is installed but the service still runs the previous one. Run `t3 service restart`.                            |
 
 On macOS, check **System Settings → General → Login Items** if the service no
@@ -162,15 +162,15 @@ For failures after signing in to T3 Connect, see
 
 ## Reclaim database space
 
-M3 Code removes internal history older than a day on its own while it runs;
+ZZZ Code removes internal history older than a day on its own while it runs;
 your conversations are kept. Databases created before this shrank automatically
 still hold the freed space on disk until a one-time offline repair returns it
 and turns on automatic shrinking. Settings > Maintenance (web and desktop) or
 Settings > Maintenance (mobile) suggests the repair when at least 1 GiB can be
 reclaimed.
 
-When the desktop app or the background service runs M3 Code on that machine,
-select **Reclaim** in Settings on web or desktop. M3 Code checks for free disk
+When the desktop app or the background service runs ZZZ Code on that machine,
+select **Reclaim** in Settings on web or desktop. ZZZ Code checks for free disk
 space, then stops, repairs the database, and starts again. It is offline while
 the repair runs, and running agents stop. If the repair fails, Settings shows
 why.

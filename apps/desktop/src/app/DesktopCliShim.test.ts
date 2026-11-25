@@ -4,9 +4,13 @@ import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 
+import * as HostProcess from "@t3tools/shared/HostProcess";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 
 import { type CliShimTarget, renderCliShim } from "./DesktopCliShim.ts";
+
+// The rendered shim is a POSIX shell script for Linux and macOS.
+const onWindowsHost = HostProcess.Platform.defaultValue() === "win32";
 
 const directories: Array<string> = [];
 afterEach(() => {
@@ -45,7 +49,7 @@ const fakeAppImage = (canMount = true, app = REPORTER) => {
   const root = tempRoot();
   const image = NodePath.join(root, "image");
   writeExecutable(NodePath.join(image, "t3code"), app);
-  const appImage = NodePath.join(root, "M3 Code.AppImage");
+  const appImage = NodePath.join(root, "ZZZ Code.AppImage");
   writeExecutable(
     appImage,
     [
@@ -149,7 +153,7 @@ describe("renderCliShim", () => {
     },
   );
 
-  it("extracts the AppImage where it cannot be mounted", () => {
+  it.skipIf(onWindowsHost)("extracts the AppImage where it cannot be mounted", () => {
     const { shim } = fakeAppImage(false);
     const result = run(shim, ["--version"], { APPIMAGE_EXTRACT_AND_RUN: "1" });
     expect(result.status).toBe(3);
@@ -159,7 +163,7 @@ describe("renderCliShim", () => {
   });
 
   // The server skips its compile cache only under APPIMAGE; each mount path is new.
-  it("tells the CLI it runs from the mounted AppImage", () => {
+  it.skipIf(onWindowsHost)("tells the CLI it runs from the mounted AppImage", () => {
     const { appImage, shim } = fakeAppImage();
     const result = run(shim, ["--version"]);
     expect(result.status).toBe(3);
@@ -168,7 +172,7 @@ describe("renderCliShim", () => {
     expect(closedStdin.status).toBe(3);
   });
 
-  it("keeps the install's T3 home under sudo, unless one is set", () => {
+  it.skipIf(onWindowsHost)("keeps the install's T3 home under sudo, unless one is set", () => {
     const root = tempRoot();
     writeExecutable(NodePath.join(root, "app"), REPORTER);
     const shim = writeShim(root, {
@@ -182,9 +186,9 @@ describe("renderCliShim", () => {
     expect(relative.stdout).toContain(`cli=${shim}`);
   });
 
-  it("runs an installed app's server directly", () => {
+  it.skipIf(onWindowsHost)("runs an installed app's server directly", () => {
     const root = tempRoot();
-    const executable = NodePath.join(root, "opt", "M3 Code", "t3code");
+    const executable = NodePath.join(root, "opt", "ZZZ Code", "t3code");
     writeExecutable(executable, REPORTER);
     const shim = writeShim(root, {
       kind: "direct",
@@ -200,7 +204,7 @@ describe("renderCliShim", () => {
   });
 
   it("writes a Windows launcher that keeps cmd from reinterpreting paths", () => {
-    const executable = "C:\\Apps\\R&whoami&X 100%\\!CHANNEL!\\M3 Code.exe";
+    const executable = "C:\\Apps\\R&whoami&X 100%\\!CHANNEL!\\ZZZ Code.exe";
     const script = renderCliShim({
       target: { kind: "windows", executable, entry: "C:\\Apps\\server.asar\\bin.mjs" },
       shimPath: "C:\\Users\\José\\.t3\\bin\\t3.cmd",
@@ -210,7 +214,7 @@ describe("renderCliShim", () => {
     expect(lines).toContain("setlocal EnableExtensions DisableDelayedExpansion");
     expect(lines).toContain("chcp 65001 >nul");
     expect(lines).toContain(
-      'if exist "C:\\Apps\\R&whoami&X 100%%\\!CHANNEL!\\M3 Code.exe" goto run',
+      'if exist "C:\\Apps\\R&whoami&X 100%%\\!CHANNEL!\\ZZZ Code.exe" goto run',
     );
     const bare = lines.filter(
       (line) => line.includes("whoami") && !/"[^"]*whoami[^"]*"/.test(line),

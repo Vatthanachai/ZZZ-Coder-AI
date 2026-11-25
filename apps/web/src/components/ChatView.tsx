@@ -3001,7 +3001,7 @@ export default function ChatView(props: ChatViewProps) {
         : serverConfig === null
           ? gt("Side chats are not ready yet. Try again in a moment.")
           : serverConfig.environment.capabilities.sideChats !== true
-            ? gt("Update this environment's M3 Code server to use side chats.")
+            ? gt("Update this environment's ZZZ Code server to use side chats.")
             : sideChatsOffered && !isServerThread
               ? gt("Side chats start after the first message.")
               : sideChat.available &&
@@ -3272,7 +3272,6 @@ export default function ChatView(props: ChatViewProps) {
     composerDraftTarget,
     resendAfterWorkLocallyStable,
     sendInFlightRef,
-    routeThreadKey,
     sendEnvMode,
     setDraftThreadContext,
     workLocallyResendReady,

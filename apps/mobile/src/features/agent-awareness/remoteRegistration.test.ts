@@ -1027,7 +1027,7 @@ describe("makeRelayDeviceRegistrationRequest", () => {
     });
 
     const aggregate: RelayAgentActivityAggregateState = {
-      title: "M3 Code",
+      title: "ZZZ Code",
       subtitle: "Agent work in progress",
       activeCount: 1,
       updatedAt: "2026-10-18T10:00:00.000Z",

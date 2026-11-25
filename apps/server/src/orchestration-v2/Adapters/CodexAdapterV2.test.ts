@@ -712,7 +712,7 @@ function codexReplayPreamble(input: {
         id: 1,
         method: "initialize",
         params: {
-          clientInfo: { name: "M3 Code", title: "M3 Code", version: packageJson.version },
+          clientInfo: { name: "ZZZ Code", title: "ZZZ Code", version: packageJson.version },
           capabilities: {
             experimentalApi: true,
             optOutNotificationMethods: ["turn/diff/updated"],
@@ -729,7 +729,7 @@ function codexReplayPreamble(input: {
       frame: {
         id: 1,
         result: {
-          userAgent: "M3 Code/0.156.1",
+          userAgent: "ZZZ Code/0.156.1",
           codexHome: "/tmp/codex-home",
           platformFamily: "unix",
           platformOs: "macos",
@@ -1456,7 +1456,7 @@ describe("CodexAdapterV2 session initialize", () => {
               frame: {
                 id: 1,
                 result: {
-                  userAgent: "M3 Code/0.144.3 (Mac OS 15.5.0; x86_64) unknown (M3 Code; 0.1.5)",
+                  userAgent: "ZZZ Code/0.144.3 (Mac OS 15.5.0; x86_64) unknown (ZZZ Code; 0.1.5)",
                   codexHome: "/tmp/codex-home",
                   platformFamily: "unix",
                   platformOs: "macos",
@@ -1480,7 +1480,7 @@ describe("CodexAdapterV2 session initialize", () => {
       assert.instanceOf(failure.cause, ProviderSetupError);
       assert.equal(
         failure.cause.message,
-        "Codex 0.144.3 does not work with this M3 Code release. Update Codex to >=0.159.0, then retry.",
+        "Codex 0.144.3 does not work with this ZZZ Code release. Update Codex to >=0.159.0, then retry.",
       );
     }).pipe(
       Effect.scoped,
@@ -4775,7 +4775,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
                   item: {
                     type: itemType,
                     id,
-                    ...(itemType === "webSearch" ? { query: "M3 Code", action: null } : {}),
+                    ...(itemType === "webSearch" ? { query: "ZZZ Code", action: null } : {}),
                   },
                   ...timestamps,
                 },
@@ -4862,7 +4862,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
         assert.equal(unfinished[0]?.id, unfinished[1]?.id);
         assert.deepEqual(unfinished[1]?.startedAt, DateTime.makeUnsafe(1782622443000));
         if (unfinished[1]?.type === "web_search") {
-          assert.deepEqual(unfinished[1].patterns, ["M3 Code"]);
+          assert.deepEqual(unfinished[1].patterns, ["ZZZ Code"]);
           assert.deepEqual(
             harness.events.flatMap((event) =>
               event.type === "node.updated" &&

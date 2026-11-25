@@ -707,14 +707,14 @@ describe("withMessageSenderNote", () => {
     senderThreadId: ThreadId.make("t"),
   } as const;
   it.each([
-    [thread, "Hi", '[M3 Code: the agent in T3 thread "t" sent this message, not the user.]\n\nHi'],
-    [thread, "", '[M3 Code: the agent in T3 thread "t" sent this message, not the user.]'],
+    [thread, "Hi", '[ZZZ Code: the agent in T3 thread "t" sent this message, not the user.]\n\nHi'],
+    [thread, "", '[ZZZ Code: the agent in T3 thread "t" sent this message, not the user.]'],
     [thread, " /git/review staged", " /git/review staged"],
     [thread, "$deploy ship it", "$deploy ship it"],
     [
       thread,
       "$25 left",
-      '[M3 Code: the agent in T3 thread "t" sent this message, not the user.]\n\n$25 left',
+      '[ZZZ Code: the agent in T3 thread "t" sent this message, not the user.]\n\n$25 left',
     ],
     [
       {
@@ -727,17 +727,17 @@ describe("withMessageSenderNote", () => {
         },
       },
       "Hi",
-      '[M3 Code: the agent in T3 thread "r" on linked environment "e" sent this message, not the user.]\n\nHi',
+      '[ZZZ Code: the agent in T3 thread "r" on linked environment "e" sent this message, not the user.]\n\nHi',
     ],
     [
       { createdBy: "user", creationSource: "web", scheduledTaskId: ScheduledTaskId.make("s") },
       "Hi",
-      '[M3 Code: scheduled task "s" sent this prompt, not the user typing in this chat.]\n\nHi',
+      '[ZZZ Code: scheduled task "s" sent this prompt, not the user typing in this chat.]\n\nHi',
     ],
     [
       { createdBy: "agent", creationSource: "mcp" },
       "Hi",
-      "[M3 Code: this message came through M3 Code's tools, not from the user typing in this chat.]\n\nHi",
+      "[ZZZ Code: this message came through ZZZ Code's tools, not from the user typing in this chat.]\n\nHi",
     ],
     [{ createdBy: "user", creationSource: "web" }, "Hi", "Hi"],
     [{ createdBy: "agent", creationSource: "server" }, "Hi", "Hi"],
